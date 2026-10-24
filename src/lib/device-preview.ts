@@ -40,6 +40,7 @@ export function createDemoExample(type: ContentType, t: Translate) {
     wifi: { ssid: 'Studio Wi-Fi', password: 'just-an-example', encryption: 'WPA', hidden: false },
     email: { to: 'hello@example.com', subject: t('demo.sample.subject'), body: t('demo.sample.message') },
     phone: { number: '+1 202 555 0123' },
+    whatsapp: { number: '+55 11 91234 5678', message: t('demo.sample.message') },
     sms: { number: '+1 202 555 0123', message: t('demo.sample.message') },
     contact: {
       ...DEFAULT_FIELDS.contact,

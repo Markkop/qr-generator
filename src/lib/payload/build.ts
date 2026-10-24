@@ -118,6 +118,17 @@ function buildPhone({ number }: FieldsByType['phone']): BuildResult {
   return result(`tel:${normalized}`, { warnings: phoneWarnings(normalized) })
 }
 
+function buildWhatsapp({ number, message }: FieldsByType['whatsapp']): BuildResult {
+  const digits = number.replace(/\D/g, '').replace(/^00/, '')
+  if (!digits) return result(null, { hint: msg('hint.whatsapp') })
+  if (digits.length < 8 || digits.length > 15) {
+    return result(null, { errors: { number: msg('error.phoneShort') } })
+  }
+  const text = message.trim()
+  const link = text ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}` : `https://wa.me/${digits}`
+  return result(link, { warnings: phoneWarnings(number.trim()) })
+}
+
 function buildSms({ number, message }: FieldsByType['sms']): BuildResult {
   const normalized = normalizePhone(number)
   if (!normalized) return result(null, { hint: msg('hint.sms') })
@@ -180,6 +191,8 @@ export function buildPayload<T extends ContentType>(type: T, fields: FieldsByTyp
       return buildEmail(fields as FieldsByType['email'])
     case 'phone':
       return buildPhone(fields as FieldsByType['phone'])
+    case 'whatsapp':
+      return buildWhatsapp(fields as FieldsByType['whatsapp'])
     case 'sms':
       return buildSms(fields as FieldsByType['sms'])
     case 'contact':
@@ -204,6 +217,8 @@ export function describe<T extends ContentType>(type: T, fields: FieldsByType[T]
       return (fields as FieldsByType['email']).to.trim()
     case 'phone':
       return (fields as FieldsByType['phone']).number.trim()
+    case 'whatsapp':
+      return (fields as FieldsByType['whatsapp']).number.trim()
     case 'sms':
       return (fields as FieldsByType['sms']).number.trim()
     case 'contact': {

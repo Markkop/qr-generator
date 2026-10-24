@@ -47,6 +47,7 @@ const ICONS: Record<ContentType, LucideIcon> = {
   wifi: Wifi,
   email: Mail,
   phone: Phone,
+  whatsapp: MessageCircle,
   sms: MessageCircle,
   contact: UserRound,
   location: MapPin,
@@ -166,6 +167,21 @@ function ResultScreen({ type, os, example }: { type: ContentType; os: DemoOS; ex
           <span className="demo-call">
             <Phone />
           </span>
+        </div>
+      ) : type === 'whatsapp' ? (
+        <div className="demo-messages">
+          <div className="demo-recipient">
+            <small>WhatsApp</small>
+            <span>+55 11 91234 5678</span>
+          </div>
+          <p className="demo-draft-label">{t('demo.draft')}</p>
+          <div className="demo-composer">
+            <Plus />
+            <span>{example.fields.whatsapp.message}</span>
+            <span className="demo-send">
+              <ArrowRight />
+            </span>
+          </div>
         </div>
       ) : type === 'sms' ? (
         <div className="demo-messages">

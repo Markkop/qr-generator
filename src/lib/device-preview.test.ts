@@ -19,7 +19,7 @@ describe('passive demo device inference', () => {
 })
 
 describe('illustration examples', () => {
-  it.each(['pt-BR', 'en'] as const)('provides valid, fictional payloads for all eight types in %s', (locale) => {
+  it.each(['pt-BR', 'en'] as const)('provides valid, fictional payloads for every type in %s', (locale) => {
     const { t } = createTranslator(locale)
     const expectedPrefixes = {
       url: 'https://markkop.dev',
@@ -27,6 +27,7 @@ describe('illustration examples', () => {
       wifi: 'WIFI:T:WPA;S:Studio Wi-Fi;',
       email: 'mailto:hello@example.com?',
       phone: 'tel:+12025550123',
+      whatsapp: 'https://wa.me/5511912345678?text=',
       sms: 'SMSTO:+12025550123:',
       contact: 'BEGIN:VCARD\r\nVERSION:3.0',
       location: 'geo:-23.5505,-46.6333',

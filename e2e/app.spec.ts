@@ -167,6 +167,13 @@ test('every content type produces a scannable code', async ({ page }) => {
     ['E-mail', async (p) => p.getByLabel('Endereço de e-mail', { exact: true }).fill('ada@example.com')],
     ['Telefone', async (p) => p.getByLabel('Número de telefone', { exact: true }).fill('+1 555 123 4567')],
     [
+      'WhatsApp',
+      async (p) => {
+        await p.getByLabel('Número de telefone', { exact: true }).fill('+55 11 91234 5678')
+        await p.getByLabel('Mensagem (opcional)', { exact: true }).fill('Olá')
+      },
+    ],
+    [
       'SMS',
       async (p) => {
         await p.getByLabel('Número de telefone', { exact: true }).fill('+15551234567')
@@ -234,11 +241,8 @@ test('defaults to Portuguese and remembers English', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('QR Code')
   await expect(page.getByText('Grátis e simples')).toBeVisible()
-  await expect(page).toHaveTitle('QR Code grátis e simples | links, Wi-Fi e contatos')
-  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
-    'content',
-    /Gerador de QR Code grátis e simples/,
-  )
+  await expect(page).toHaveTitle('WhatsApp, links e Wi-Fi | QR Code by Mark Kop')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /QR Code grátis para WhatsApp/)
   await expect(page.getByRole('link', { name: /Feito com amor por Mark Kop/ })).toHaveAttribute(
     'href',
     'https://markkop.dev',
@@ -253,8 +257,8 @@ test('defaults to Portuguese and remembers English', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('QR Code')
   await expect(page.getByText('Free and simple')).toBeVisible()
-  await expect(page).toHaveTitle('QR Code: free and simple | links, Wi-Fi and contacts')
-  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Free and simple QR code generator/)
+  await expect(page).toHaveTitle('WhatsApp, links and Wi-Fi | QR Code by Mark Kop')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /free QR code for WhatsApp/)
   await page.getByLabel('Website URL', { exact: true }).fill('example.com')
   await expectScans(page)
   await page.getByLabel('Language').selectOption('pt-BR')

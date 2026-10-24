@@ -1,5 +1,16 @@
 import { useRef, type KeyboardEvent } from 'react'
-import { AtSign, Contact, Link, MapPin, MessageSquare, Phone, Type, Wifi, type LucideIcon } from 'lucide-react'
+import {
+  AtSign,
+  Contact,
+  Link,
+  MapPin,
+  MessageCircle,
+  MessageSquare,
+  Phone,
+  Type,
+  Wifi,
+  type LucideIcon,
+} from 'lucide-react'
 import { useI18n } from '../i18n/context'
 import { CONTENT_TYPES, typeLabelKey, type ContentType } from '../lib/payload/types'
 import { cx } from '../lib/cx'
@@ -11,6 +22,7 @@ const ICONS: Record<ContentType, LucideIcon> = {
   wifi: Wifi,
   email: AtSign,
   phone: Phone,
+  whatsapp: MessageCircle,
   sms: MessageSquare,
   contact: Contact,
   location: MapPin,

@@ -213,6 +213,39 @@ function PhoneForm({ fields, errors, onChange }: FormProps<'phone'>) {
   )
 }
 
+function WhatsappForm({ fields, errors, onChange }: FormProps<'whatsapp'>) {
+  const { t } = useI18n()
+  const error = useErrorText(errors)
+  return (
+    <div className="flex flex-col gap-4">
+      <Field label={t('phone.number')} error={error('number')} hint={t('whatsapp.hint')}>
+        {(p) => (
+          <PasteInput
+            {...p}
+            label={t('phone.number')}
+            type="tel"
+            inputMode="tel"
+            placeholder={t('phone.placeholder')}
+            value={fields.number}
+            onChange={(e) => onChange({ number: e.target.value })}
+          />
+        )}
+      </Field>
+      <Field label={t('sms.message')}>
+        {(p) => (
+          <PasteArea
+            {...p}
+            label={t('sms.message')}
+            rows={3}
+            value={fields.message}
+            onChange={(e) => onChange({ message: e.target.value })}
+          />
+        )}
+      </Field>
+    </div>
+  )
+}
+
 function SmsForm({ fields, errors, onChange }: FormProps<'sms'>) {
   const { t } = useI18n()
   const error = useErrorText(errors)
@@ -357,6 +390,7 @@ const FORMS: { [T in ContentType]: (props: FormProps<T>) => React.JSX.Element } 
   wifi: WifiForm,
   email: EmailForm,
   phone: PhoneForm,
+  whatsapp: WhatsappForm,
   sms: SmsForm,
   contact: ContactForm,
   location: LocationForm,
