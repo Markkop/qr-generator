@@ -31,7 +31,7 @@ test.afterEach(() => {
 })
 
 test('generates a URL code, downloads it and keeps it in history', async ({ page }) => {
-  await page.getByLabel('Endereço do site').fill('markkop.dev')
+  await page.getByLabel('Endereço do site', { exact: true }).fill('markkop.dev')
   await expectScans(page)
 
   const [download] = await Promise.all([
@@ -68,12 +68,12 @@ test('generates a URL code, downloads it and keeps it in history', async ({ page
   await openHistory(page)
   await expect(page.getByTestId('history-entry')).toHaveCount(1)
   await page.getByRole('button', { name: 'Abrir markkop.dev no editor' }).click()
-  await expect(page.getByLabel('Endereço do site')).toHaveValue('markkop.dev')
+  await expect(page.getByLabel('Endereço do site', { exact: true })).toHaveValue('markkop.dev')
   await expectScans(page)
 })
 
 test('exports SVG', async ({ page }) => {
-  await page.getByLabel('Endereço do site').fill('example.com')
+  await page.getByLabel('Endereço do site', { exact: true }).fill('example.com')
   await expectScans(page)
   await page.getByLabel('Formato do arquivo').selectOption('svg')
   await expect(page.getByLabel('Tamanho da imagem')).toBeDisabled()
@@ -86,8 +86,36 @@ test('exports SVG', async ({ page }) => {
   expect(svg).toContain('<svg')
 })
 
+test('pastes clipboard text into a line field and below a textarea', async ({ page }) => {
+  await page.evaluate(() => navigator.clipboard.writeText('markkop.dev'))
+  const url = page.getByLabel('Endereço do site', { exact: true })
+  const urlPaste = page.getByRole('button', { name: 'Colar em Endereço do site' })
+  await urlPaste.click()
+  await expect(url).toHaveValue('markkop.dev')
+  const urlBox = await url.boundingBox()
+  const urlPasteBox = await urlPaste.boundingBox()
+  expect(urlBox && urlPasteBox && Math.abs(urlBox.y - urlPasteBox.y)).toBeLessThan(8)
+  expect(urlPasteBox!.x).toBeGreaterThan(urlBox!.x + urlBox!.width - 1)
+  await expectScans(page)
+
+  await page.getByRole('tab', { name: 'Texto' }).click()
+  await page.evaluate(() => navigator.clipboard.writeText('Olá, área de transferência'))
+  const text = page.getByRole('textbox', { name: 'Texto' })
+  const textPaste = page.getByRole('button', { name: 'Colar em Texto' })
+  await textPaste.click()
+  await expect(text).toHaveValue('Olá, área de transferência')
+  const textBox = await text.boundingBox()
+  const textPasteBox = await textPaste.boundingBox()
+  expect(textBox && textPasteBox && textPasteBox.y).toBeGreaterThanOrEqual(textBox.y + textBox.height - 1)
+
+  await page.setViewportSize({ width: 320, height: 700 })
+  await page.getByRole('tab', { name: 'Localização' }).click()
+  await expect(page.getByRole('button', { name: 'Colar em Latitude' })).toBeVisible()
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
+})
+
 test('copies the image and the content to the clipboard', async ({ page }) => {
-  await page.getByLabel('Endereço do site').fill('example.com')
+  await page.getByLabel('Endereço do site', { exact: true }).fill('example.com')
   await expectScans(page)
 
   await page.getByRole('button', { name: 'Copiar imagem' }).click()
@@ -112,7 +140,7 @@ test('builds Wi-Fi codes and skips history when auto-save is off', async ({ page
   await page.keyboard.press('Escape')
   await expect(page.getByRole('dialog', { name: 'Histórico' })).toBeHidden()
   await page.getByRole('tab', { name: 'Wi-Fi' }).click()
-  await page.getByLabel('Nome da rede (SSID)').fill('Cafe; Wifi')
+  await page.getByLabel('Nome da rede (SSID)', { exact: true }).fill('Cafe; Wifi')
   await page.getByLabel('Senha', { exact: true }).fill('p:w,d\\1secret')
   await expectScans(page)
   await page.getByRole('button', { name: 'Copiar texto' }).click()
@@ -125,28 +153,28 @@ test('builds Wi-Fi codes and skips history when auto-save is off', async ({ page
 
 test('every content type produces a scannable code', async ({ page }) => {
   const steps: [string, (page: Page) => Promise<void>][] = [
-    ['E-mail', async (p) => p.getByLabel('Endereço de e-mail').fill('ada@example.com')],
-    ['Telefone', async (p) => p.getByLabel('Número de telefone').fill('+1 555 123 4567')],
+    ['E-mail', async (p) => p.getByLabel('Endereço de e-mail', { exact: true }).fill('ada@example.com')],
+    ['Telefone', async (p) => p.getByLabel('Número de telefone', { exact: true }).fill('+1 555 123 4567')],
     [
       'SMS',
       async (p) => {
-        await p.getByLabel('Número de telefone').fill('+15551234567')
-        await p.getByLabel('Mensagem (opcional)').fill('On my way')
+        await p.getByLabel('Número de telefone', { exact: true }).fill('+15551234567')
+        await p.getByLabel('Mensagem (opcional)', { exact: true }).fill('On my way')
       },
     ],
     [
       'Contato',
       async (p) => {
         await p.getByLabel('Nome', { exact: true }).fill('Ada')
-        await p.getByLabel('Sobrenome').fill('Lovelace')
-        await p.getByLabel('Empresa').fill('Analytical Engine, Ltd')
+        await p.getByLabel('Sobrenome', { exact: true }).fill('Lovelace')
+        await p.getByLabel('Empresa', { exact: true }).fill('Analytical Engine, Ltd')
       },
     ],
     [
       'Localização',
       async (p) => {
-        await p.getByLabel('Latitude').fill('-23.5505')
-        await p.getByLabel('Longitude').fill('-46.6333')
+        await p.getByLabel('Latitude', { exact: true }).fill('-23.5505')
+        await p.getByLabel('Longitude', { exact: true }).fill('-46.6333')
       },
     ],
   ]
@@ -158,7 +186,7 @@ test('every content type produces a scannable code', async ({ page }) => {
 })
 
 test('a logo raises error correction and still scans', async ({ page }) => {
-  await page.getByLabel('Endereço do site').fill('example.com')
+  await page.getByLabel('Endereço do site', { exact: true }).fill('example.com')
   await expectScans(page)
   await page.getByText('Estilo', { exact: true }).click()
 
@@ -179,7 +207,7 @@ test('a logo raises error correction and still scans', async ({ page }) => {
 })
 
 test('warns about low contrast', async ({ page }) => {
-  await page.getByLabel('Endereço do site').fill('example.com')
+  await page.getByLabel('Endereço do site', { exact: true }).fill('example.com')
   await page.getByText('Estilo', { exact: true }).click()
   await page.getByLabel('Cor do código: valor hexadecimal').fill('#eeeeee')
   await expect(page.getByText(/O contraste está muito baixo/)).toBeVisible()
@@ -193,7 +221,13 @@ test('explains when the content is too long', async ({ page }) => {
 
 test('defaults to Portuguese and remembers English', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
-  await expect(page).toHaveTitle(/Gerador de QR Code/)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('QR Code')
+  await expect(page.getByText('Grátis e simples')).toBeVisible()
+  await expect(page).toHaveTitle('QR Code grátis e simples | links, Wi-Fi e contatos')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /Gerador de QR Code grátis e simples/,
+  )
   await expect(page.getByRole('link', { name: /Feito com amor por Mark Kop/ })).toHaveAttribute(
     'href',
     'https://markkop.dev',
@@ -201,14 +235,17 @@ test('defaults to Portuguese and remembers English', async ({ page }) => {
 
   await page.getByLabel('Idioma').selectOption('en')
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-  await expect(page.getByLabel('Website URL')).toBeVisible()
+  await expect(page.getByLabel('Website URL', { exact: true })).toBeVisible()
   await expect(page.getByRole('link', { name: /Made with love by Mark Kop/ })).toBeVisible()
 
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-  await expect(page).toHaveTitle(/QR Generator/)
-  await page.getByLabel('Website URL').fill('example.com')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('QR Code')
+  await expect(page.getByText('Free and simple')).toBeVisible()
+  await expect(page).toHaveTitle('QR Code: free and simple | links, Wi-Fi and contacts')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', /Free and simple QR code generator/)
+  await page.getByLabel('Website URL', { exact: true }).fill('example.com')
   await expectScans(page)
   await page.getByLabel('Language').selectOption('pt-BR')
-  await expect(page.getByLabel('Endereço do site')).toHaveValue('example.com')
+  await expect(page.getByLabel('Endereço do site', { exact: true })).toHaveValue('example.com')
 })

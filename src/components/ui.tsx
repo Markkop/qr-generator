@@ -1,15 +1,19 @@
+import { ClipboardPaste } from 'lucide-react'
 import { useI18n } from '../i18n/context'
 import { cx } from '../lib/cx'
 import {
   forwardRef,
   useId,
+  useRef,
   useState,
   type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
+  type RefObject,
   type SelectHTMLAttributes,
   type TextareaHTMLAttributes,
 } from 'react'
+import { useToast } from './toast-context'
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 
@@ -82,8 +86,73 @@ export const TextInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLIn
   return <input ref={ref} className={cx(controlClass, 'h-10', className)} {...props} />
 })
 
-export function TextArea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  return <textarea className={cx(controlClass, 'min-h-24 py-2', className)} {...props} />
+export const TextArea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function TextArea(
+  { className, ...props },
+  ref,
+) {
+  return <textarea ref={ref} className={cx(controlClass, 'min-h-24 py-2', className)} {...props} />
+})
+
+function writeControlValue(element: HTMLInputElement | HTMLTextAreaElement, value: string) {
+  const prototype = element instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype
+  Object.getOwnPropertyDescriptor(prototype, 'value')?.set?.call(element, value)
+  element.dispatchEvent(new Event('input', { bubbles: true }))
+}
+
+export function PasteButton({
+  control,
+  label,
+}: {
+  control: RefObject<HTMLInputElement | HTMLTextAreaElement | null>
+  label: string
+}) {
+  const { t } = useI18n()
+  const toast = useToast()
+  return (
+    <button
+      type="button"
+      aria-label={t('field.pasteInto', { label })}
+      onClick={() => {
+        const element = control.current
+        if (!element) return
+        void navigator.clipboard
+          .readText()
+          .then((text) => {
+            writeControlValue(element, text)
+            element.focus()
+          })
+          .catch(() => toast(t('field.pasteFailed'), 'error'))
+      }}
+      className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-zinc-300 bg-surface px-2.5 text-sm font-medium whitespace-nowrap text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+    >
+      <ClipboardPaste className="size-4" aria-hidden />
+      {t('field.paste')}
+    </button>
+  )
+}
+
+export function PasteInput({ label, className, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
+  const ref = useRef<HTMLInputElement>(null)
+  return (
+    <div className="flex items-center gap-2">
+      <TextInput ref={ref} className={cx('min-w-0 flex-1', className)} {...props} />
+      <PasteButton control={ref} label={label} />
+    </div>
+  )
+}
+
+export function PasteArea({
+  label,
+  className,
+  ...props
+}: TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  return (
+    <div className="flex flex-col items-end gap-1.5">
+      <TextArea ref={ref} className={cx('w-full', className)} {...props} />
+      <PasteButton control={ref} label={label} />
+    </div>
+  )
 }
 
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {

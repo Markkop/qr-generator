@@ -1,7 +1,9 @@
 export const ptBR = {
-  'app.name': 'Gerador de QR Code',
-  'app.tagline': 'Grátis, privado e funciona offline',
-  'app.documentTitle': 'Gerador de QR Code: grátis para links, Wi-Fi e contatos',
+  'app.name': 'QR Code',
+  'app.tagline': 'Grátis e simples',
+  'app.documentTitle': 'QR Code grátis e simples | links, Wi-Fi e contatos',
+  'app.metaDescription':
+    'Gerador de QR Code grátis e simples para links, texto, Wi-Fi, e-mail, telefone, SMS, contatos e localização. Baixe PNG ou SVG no navegador, sem cadastro.',
   'app.skip': 'Pular para o conteúdo',
 
   'theme.label': 'Tema',
@@ -10,6 +12,9 @@ export const ptBR = {
   'theme.light': 'Tema: claro',
   'theme.dark': 'Tema: escuro',
   'language.label': 'Idioma',
+  'field.paste': 'Colar',
+  'field.pasteInto': 'Colar em {label}',
+  'field.pasteFailed': 'Não foi possível colar. Permita o acesso à área de transferência.',
 
   'tabs.label': 'Tipo de conteúdo',
   'type.url': 'URL',
@@ -297,7 +302,7 @@ export const ptBR = {
   'history.imported_one': '{count} código importado.',
   'history.imported_other': '{count} códigos importados.',
   'history.importInvalidJson': 'Esse arquivo não é um JSON válido.',
-  'history.importNotBackup': 'Esse arquivo não é um backup do Gerador de QR Code.',
+  'history.importNotBackup': 'Esse arquivo não é um backup do QR Code.',
   'history.importFailed': 'A importação falhou.',
   'history.confirmClear':
     'Excluir todos os QR codes salvos? Não dá para desfazer. Exporte um backup antes se quiser guardá-los.',

@@ -3,3 +3,5 @@ dev-dist
 pnpm-lock.yaml
 playwright-report
 test-results
+public/robots.txt
+public/sitemap.xml

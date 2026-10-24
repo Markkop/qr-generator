@@ -18,11 +18,11 @@ test('plays a scan, pauses, replays, and yields to the real QR code', async ({ p
   await page.getByRole('button', { name: 'Repetir demonstração' }).click()
   await expect(demo).toHaveAttribute('data-phase', 'aim')
 
-  await page.getByLabel('Endereço do site').fill('example.com')
+  await page.getByLabel('Endereço do site', { exact: true }).fill('example.com')
   await page.clock.runFor(1000)
   await expect(page.getByTestId('qr-preview')).toBeVisible()
   await expect(demo).toHaveCount(0)
-  await page.getByLabel('Endereço do site').fill('')
+  await page.getByLabel('Endereço do site', { exact: true }).fill('')
   await expect(demo).toBeVisible()
 })
 

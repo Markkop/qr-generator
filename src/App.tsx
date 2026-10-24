@@ -182,28 +182,37 @@ export default function App() {
       >
         {t('app.skip')}
       </a>
-      <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
-        <div className="flex items-center gap-2.5">
-          <span className="flex size-9 items-center justify-center rounded-xl bg-indigo-600 text-white">
-            <QrCode className="size-5" aria-hidden />
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white sm:size-9">
+            <QrCode className="size-4 sm:size-5" aria-hidden />
           </span>
-          <div>
-            <h1 className="text-lg leading-tight font-semibold">{t('app.name')}</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('app.tagline')}</p>
+          <div className="min-w-0">
+            <h1 className="truncate text-base leading-tight font-semibold sm:text-lg">{t('app.name')}</h1>
+            <p className="truncate text-[11px] text-zinc-500 sm:text-xs dark:text-zinc-400">{t('app.tagline')}</p>
           </div>
         </div>
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <LanguageSelect />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2">
             <HistoryPanel
               saveHistory={prefs.saveHistory}
               onSaveHistoryChange={(saveHistory) => updatePrefs({ saveHistory })}
               onOpen={onOpen}
             />
+            <button
+              type="button"
+              onClick={() => updatePrefs({ theme: prefs.theme === 'dark' ? 'light' : 'dark' })}
+              aria-label={t(prefs.theme === 'dark' ? 'theme.dark' : 'theme.light')}
+              title={t(prefs.theme === 'dark' ? 'theme.darkName' : 'theme.lightName')}
+              className="inline-flex size-8 items-center justify-center rounded-lg border border-zinc-200 bg-soft text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:hidden dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            >
+              {prefs.theme === 'dark' ? <Moon className="size-4" aria-hidden /> : <Sun className="size-4" aria-hidden />}
+            </button>
             <div
               role="group"
               aria-label={t('theme.label')}
-              className="flex gap-1 rounded-xl border border-zinc-200 bg-soft p-1 dark:border-zinc-700"
+              className="hidden gap-1 rounded-xl border border-zinc-200 bg-soft p-1 sm:flex dark:border-zinc-700"
             >
               {THEMES.map(({ value, icon: Icon, label, name }) => (
                 <button

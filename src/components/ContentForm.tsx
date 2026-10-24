@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState, type InputHTMLAttributes } from 'react'
 import { Eye, EyeOff, LocateFixed } from 'lucide-react'
 import { useI18n } from '../i18n/context'
 import type { Message, MessageKey } from '../i18n/messages'
 import type { ContentType, FieldsByType, WifiEncryption } from '../lib/payload/types'
-import { Button, Field, Segmented, Switch, TextArea, TextInput } from './ui'
+import { Button, Field, PasteArea, PasteButton, PasteInput, Segmented, Switch, TextInput } from './ui'
 import { useToast } from './toast-context'
 
 interface FormProps<T extends ContentType> {
@@ -23,8 +23,9 @@ function UrlForm({ fields, errors, onChange }: FormProps<'url'>) {
   return (
     <Field label={t('url.label')} error={error('url')} hint={t('url.hint')}>
       {(p) => (
-        <TextInput
+        <PasteInput
           {...p}
+          label={t('url.label')}
           type="url"
           inputMode="url"
           autoComplete="url"
@@ -43,8 +44,9 @@ function TextForm({ fields, errors, onChange }: FormProps<'text'>) {
   return (
     <Field label={t('text.label')} error={error('text')}>
       {(p) => (
-        <TextArea
+        <PasteArea
           {...p}
+          label={t('text.label')}
           rows={5}
           placeholder={t('text.placeholder')}
           value={fields.text}
@@ -55,31 +57,43 @@ function TextForm({ fields, errors, onChange }: FormProps<'text'>) {
   )
 }
 
-function PasswordInput(
-  props: { id: string; value: string; onChange: (value: string) => void } & Record<string, unknown>,
-) {
+function PasswordInput({
+  value,
+  onChange,
+  label,
+  ...rest
+}: {
+  id: string
+  label: string
+  value: string
+  onChange: (value: string) => void
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'>) {
   const { t } = useI18n()
-  const { value, onChange, ...rest } = props
+  const inputRef = useRef<HTMLInputElement>(null)
   const [visible, setVisible] = useState(false)
   return (
-    <div className="relative">
-      <TextInput
-        {...rest}
-        type={visible ? 'text' : 'password'}
-        autoComplete="off"
-        spellCheck={false}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="pr-10"
-      />
-      <button
-        type="button"
-        onClick={() => setVisible((v) => !v)}
-        aria-label={visible ? t('wifi.hidePassword') : t('wifi.showPassword')}
-        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
-      >
-        {visible ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
-      </button>
+    <div className="flex items-center gap-2">
+      <div className="relative min-w-0 flex-1">
+        <TextInput
+          {...rest}
+          ref={inputRef}
+          type={visible ? 'text' : 'password'}
+          autoComplete="off"
+          spellCheck={false}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="pr-10"
+        />
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? t('wifi.hidePassword') : t('wifi.showPassword')}
+          className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200"
+        >
+          {visible ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
+        </button>
+      </div>
+      <PasteButton control={inputRef} label={label} />
     </div>
   )
 }
@@ -97,8 +111,9 @@ function WifiForm({ fields, errors, onChange }: FormProps<'wifi'>) {
     <div className="flex flex-col gap-4">
       <Field label={t('wifi.ssid')} error={error('ssid')}>
         {(p) => (
-          <TextInput
+          <PasteInput
             {...p}
+            label={t('wifi.ssid')}
             autoComplete="off"
             spellCheck={false}
             value={fields.ssid}
@@ -114,7 +129,14 @@ function WifiForm({ fields, errors, onChange }: FormProps<'wifi'>) {
       />
       {fields.encryption !== 'nopass' && (
         <Field label={t('wifi.password')} error={error('password')}>
-          {(p) => <PasswordInput {...p} value={fields.password} onChange={(password) => onChange({ password })} />}
+          {(p) => (
+            <PasswordInput
+              {...p}
+              label={t('wifi.password')}
+              value={fields.password}
+              onChange={(password) => onChange({ password })}
+            />
+          )}
         </Field>
       )}
       <Switch
@@ -134,8 +156,9 @@ function EmailForm({ fields, errors, onChange }: FormProps<'email'>) {
     <div className="flex flex-col gap-4">
       <Field label={t('email.to')} error={error('to')}>
         {(p) => (
-          <TextInput
+          <PasteInput
             {...p}
+            label={t('email.to')}
             type="email"
             inputMode="email"
             placeholder={t('email.placeholder')}
@@ -145,10 +168,25 @@ function EmailForm({ fields, errors, onChange }: FormProps<'email'>) {
         )}
       </Field>
       <Field label={t('email.subject')}>
-        {(p) => <TextInput {...p} value={fields.subject} onChange={(e) => onChange({ subject: e.target.value })} />}
+        {(p) => (
+          <PasteInput
+            {...p}
+            label={t('email.subject')}
+            value={fields.subject}
+            onChange={(e) => onChange({ subject: e.target.value })}
+          />
+        )}
       </Field>
       <Field label={t('email.body')}>
-        {(p) => <TextArea {...p} rows={3} value={fields.body} onChange={(e) => onChange({ body: e.target.value })} />}
+        {(p) => (
+          <PasteArea
+            {...p}
+            label={t('email.body')}
+            rows={3}
+            value={fields.body}
+            onChange={(e) => onChange({ body: e.target.value })}
+          />
+        )}
       </Field>
     </div>
   )
@@ -160,8 +198,9 @@ function PhoneForm({ fields, errors, onChange }: FormProps<'phone'>) {
   return (
     <Field label={t('phone.number')} error={error('number')} hint={t('phone.hint')}>
       {(p) => (
-        <TextInput
+        <PasteInput
           {...p}
+          label={t('phone.number')}
           type="tel"
           inputMode="tel"
           autoComplete="tel"
@@ -181,8 +220,9 @@ function SmsForm({ fields, errors, onChange }: FormProps<'sms'>) {
     <div className="flex flex-col gap-4">
       <Field label={t('phone.number')} error={error('number')} hint={t('phone.hint')}>
         {(p) => (
-          <TextInput
+          <PasteInput
             {...p}
+            label={t('phone.number')}
             type="tel"
             inputMode="tel"
             placeholder={t('phone.placeholder')}
@@ -193,7 +233,13 @@ function SmsForm({ fields, errors, onChange }: FormProps<'sms'>) {
       </Field>
       <Field label={t('sms.message')}>
         {(p) => (
-          <TextArea {...p} rows={3} value={fields.message} onChange={(e) => onChange({ message: e.target.value })} />
+          <PasteArea
+            {...p}
+            label={t('sms.message')}
+            rows={3}
+            value={fields.message}
+            onChange={(e) => onChange({ message: e.target.value })}
+          />
         )}
       </Field>
     </div>
@@ -205,7 +251,15 @@ function ContactForm({ fields, errors, onChange }: FormProps<'contact'>) {
   const error = useErrorText(errors)
   const text = (key: keyof FieldsByType['contact'], extra: Record<string, unknown> = {}) => (
     <Field label={t(`contact.${key}`)} error={error(key)}>
-      {(p) => <TextInput {...p} {...extra} value={fields[key]} onChange={(e) => onChange({ [key]: e.target.value })} />}
+      {(p) => (
+        <PasteInput
+          {...p}
+          {...extra}
+          label={t(`contact.${key}`)}
+          value={fields[key]}
+          onChange={(e) => onChange({ [key]: e.target.value })}
+        />
+      )}
     </Field>
   )
   return (
@@ -223,7 +277,15 @@ function ContactForm({ fields, errors, onChange }: FormProps<'contact'>) {
       {text('postcode')}
       {text('country')}
       <Field label={t('contact.note')} className="sm:col-span-2">
-        {(p) => <TextArea {...p} rows={2} value={fields.note} onChange={(e) => onChange({ note: e.target.value })} />}
+        {(p) => (
+          <PasteArea
+            {...p}
+            label={t('contact.note')}
+            rows={2}
+            value={fields.note}
+            onChange={(e) => onChange({ note: e.target.value })}
+          />
+        )}
       </Field>
     </div>
   )
@@ -254,11 +316,12 @@ function LocationForm({ fields, errors, onChange }: FormProps<'location'>) {
   }
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label={t('location.latitude')} error={error('latitude')}>
           {(p) => (
-            <TextInput
+            <PasteInput
               {...p}
+              label={t('location.latitude')}
               inputMode="decimal"
               placeholder="-23.5505"
               value={fields.latitude}
@@ -268,8 +331,9 @@ function LocationForm({ fields, errors, onChange }: FormProps<'location'>) {
         </Field>
         <Field label={t('location.longitude')} error={error('longitude')}>
           {(p) => (
-            <TextInput
+            <PasteInput
               {...p}
+              label={t('location.longitude')}
               inputMode="decimal"
               placeholder="-46.6333"
               value={fields.longitude}

@@ -376,7 +376,7 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
         aria-controls={panelId}
         aria-label={entries ? t('history.button', { count: total }) : t('history.title')}
         className={cx(
-          'relative inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 max-sm:w-10 max-sm:px-0',
+          'relative inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border px-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 max-sm:w-8 max-sm:px-0 sm:h-10 sm:rounded-xl sm:px-2.5',
           open
             ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-950 dark:text-indigo-300'
             : 'border-zinc-200 bg-soft text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800',

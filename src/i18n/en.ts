@@ -1,9 +1,11 @@
 import type { Messages } from './messages'
 
 export const en: Messages = {
-  'app.name': 'QR Generator',
-  'app.tagline': 'Free, private, works offline',
-  'app.documentTitle': 'QR Generator: free QR codes for links, Wi-Fi and contacts',
+  'app.name': 'QR Code',
+  'app.tagline': 'Free and simple',
+  'app.documentTitle': 'QR Code: free and simple | links, Wi-Fi and contacts',
+  'app.metaDescription':
+    'Free and simple QR code generator for links, text, Wi-Fi, email, phone, SMS, contacts and locations. Download PNG or SVG in your browser, with no sign-up.',
   'app.skip': 'Skip to content',
 
   'theme.label': 'Color theme',
@@ -12,6 +14,9 @@ export const en: Messages = {
   'theme.light': 'Theme: light',
   'theme.dark': 'Theme: dark',
   'language.label': 'Language',
+  'field.paste': 'Paste',
+  'field.pasteInto': 'Paste into {label}',
+  'field.pasteFailed': 'Could not paste. Allow clipboard access and try again.',
 
   'tabs.label': 'Content type',
   'type.url': 'URL',
@@ -295,7 +300,7 @@ export const en: Messages = {
   'history.imported_one': 'Imported {count} code.',
   'history.imported_other': 'Imported {count} codes.',
   'history.importInvalidJson': 'That file is not valid JSON.',
-  'history.importNotBackup': 'This file is not a QR Generator backup.',
+  'history.importNotBackup': 'This file is not a QR Code backup.',
   'history.importFailed': 'Import failed.',
   'history.confirmClear':
     'Delete every saved QR code? This cannot be undone. Export a backup first if you want to keep them.',

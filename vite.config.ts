@@ -22,9 +22,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon-180x180.png'],
       manifest: {
-        name: 'Gerador de QR Code',
-        short_name: 'QR',
-        description: 'Crie QR codes para links, Wi-Fi, contatos e mais. Privado, grátis e offline.',
+        name: 'QR Code',
+        short_name: 'QR Code',
+        description: 'Grátis e simples. QR codes para links, Wi-Fi, contatos e mais, no seu navegador.',
         lang: 'pt-BR',
         theme_color: '#f7f4ef',
         background_color: '#f7f4ef',
