@@ -6,7 +6,6 @@ import {
   Download,
   Image as ImageIcon,
   Loader2,
-  QrCode,
   Share2,
   XCircle,
 } from 'lucide-react'
@@ -17,6 +16,8 @@ import { densityOf } from '../lib/qr/encode'
 import type { Preferences } from '../lib/prefs'
 import { Button, Card, Select } from './ui'
 import { cx } from '../lib/cx'
+import type { ContentType } from '../lib/payload/types'
+import { DevicePreview } from './DevicePreview'
 
 export interface Notice {
   level: 'warn' | 'bad'
@@ -25,7 +26,7 @@ export interface Notice {
 
 interface Props {
   state: PreviewState
-  hint?: string
+  type: ContentType
   notices: Notice[]
   alt: string
   prefs: Preferences
@@ -74,30 +75,25 @@ function ScanBadge({ state }: { state: Extract<PreviewState, { status: 'ready' }
 
 export function PreviewPanel(props: Props) {
   const { t } = useI18n()
-  const { state, hint, notices, alt, prefs, onPrefsChange } = props
+  const { state, type, notices, alt, prefs, onPrefsChange } = props
   const ready = state.status === 'ready'
 
   return (
     <Card className="flex flex-col gap-4">
-      <div className="mx-auto aspect-square w-full max-w-[22rem] overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
-        {state.status === 'ready' ? (
-          <img src={state.url} alt={alt} className="size-full object-contain" data-testid="qr-preview" />
-        ) : (
-          <div className="flex size-full flex-col items-center justify-center gap-3 p-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-            {state.status === 'error' ? (
-              <>
-                <XCircle className="size-10 text-red-500" aria-hidden />
-                <p role="alert">{t(state.message)}</p>
-              </>
-            ) : (
-              <>
-                <QrCode className="size-14 text-zinc-300 dark:text-zinc-700" aria-hidden />
-                <p>{hint ?? t('preview.placeholder')}</p>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      {state.status === 'empty' ? (
+        <DevicePreview type={type} />
+      ) : (
+        <div className="mx-auto aspect-square w-full max-w-[22rem] overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+          {state.status === 'ready' ? (
+            <img src={state.url} alt={alt} className="size-full object-contain" data-testid="qr-preview" />
+          ) : (
+            <div className="flex size-full flex-col items-center justify-center gap-3 p-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+              <XCircle className="size-10 text-red-500" aria-hidden />
+              <p role="alert">{t(state.message)}</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {state.status === 'ready' && (
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">

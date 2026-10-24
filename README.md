@@ -15,6 +15,7 @@ Everything runs in the browser. There is no backend, no account and no tracking.
 - History with search, type filter, pin, rename, delete and "open in editor". Identical codes are stored once. JSON export and import let you back it up or move it to another device.
 - Brazilian Portuguese (default) and English, switchable from the header. The choice is saved in the browser.
 - Installable PWA with dark mode, keyboard navigation and screen reader labels.
+- An empty preview illustrates the scan experience for the selected QR type on Android or iOS. It infers the initial system from passive device hints, remembers manual selection, and offers pause, replay and manual steps. No camera or permission requests; reduced-motion preferences show a static result.
 
 ## Stack
 

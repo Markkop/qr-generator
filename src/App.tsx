@@ -233,7 +233,7 @@ export default function App() {
           <div className="lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
             <PreviewPanel
               state={preview}
-              hint={built.hint && tm(built.hint)}
+              type={type}
               notices={translatedNotices}
               alt={t('preview.alt', { type: t(typeLabelKey(type)), description })}
               prefs={prefs}
