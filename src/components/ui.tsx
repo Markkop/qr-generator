@@ -1,4 +1,4 @@
-import { ClipboardPaste } from 'lucide-react'
+import { ClipboardPaste, Eraser } from 'lucide-react'
 import { useI18n } from '../i18n/context'
 import { cx } from '../lib/cx'
 import {
@@ -99,7 +99,10 @@ function writeControlValue(element: HTMLInputElement | HTMLTextAreaElement, valu
   element.dispatchEvent(new Event('input', { bubbles: true }))
 }
 
-export function PasteButton({
+const fieldActionClass =
+  'inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-zinc-300 bg-surface px-2.5 text-sm font-medium whitespace-nowrap text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
+
+function PasteButton({
   control,
   label,
 }: {
@@ -123,7 +126,7 @@ export function PasteButton({
           })
           .catch(() => toast(t('field.pasteFailed'), 'error'))
       }}
-      className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-zinc-300 bg-surface px-2.5 text-sm font-medium whitespace-nowrap text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+      className={fieldActionClass}
     >
       <ClipboardPaste className="size-4" aria-hidden />
       {t('field.paste')}
@@ -131,12 +134,53 @@ export function PasteButton({
   )
 }
 
+function ClearButton({
+  control,
+  label,
+}: {
+  control: RefObject<HTMLInputElement | HTMLTextAreaElement | null>
+  label: string
+}) {
+  const { t } = useI18n()
+  return (
+    <button
+      type="button"
+      aria-label={t('field.clearFrom', { label })}
+      onClick={() => {
+        const element = control.current
+        if (!element) return
+        writeControlValue(element, '')
+        element.focus()
+      }}
+      className={fieldActionClass}
+    >
+      <Eraser className="size-4" aria-hidden />
+      {t('field.clear')}
+    </button>
+  )
+}
+
+export function FieldActions({
+  control,
+  label,
+}: {
+  control: RefObject<HTMLInputElement | HTMLTextAreaElement | null>
+  label: string
+}) {
+  return (
+    <div className="flex shrink-0 items-center gap-1.5">
+      <PasteButton control={control} label={label} />
+      <ClearButton control={control} label={label} />
+    </div>
+  )
+}
+
 export function PasteInput({ label, className, ...props }: InputHTMLAttributes<HTMLInputElement> & { label: string }) {
   const ref = useRef<HTMLInputElement>(null)
   return (
-    <div className="flex items-center gap-2">
-      <TextInput ref={ref} className={cx('min-w-0 flex-1', className)} {...props} />
-      <PasteButton control={ref} label={label} />
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <TextInput ref={ref} className={cx('min-w-32 flex-1 basis-32', className)} {...props} />
+      <FieldActions control={ref} label={label} />
     </div>
   )
 }
@@ -150,7 +194,7 @@ export function PasteArea({
   return (
     <div className="flex flex-col items-end gap-1.5">
       <TextArea ref={ref} className={cx('w-full', className)} {...props} />
-      <PasteButton control={ref} label={label} />
+      <FieldActions control={ref} label={label} />
     </div>
   )
 }

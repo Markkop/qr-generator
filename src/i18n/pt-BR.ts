@@ -15,6 +15,8 @@ export const ptBR = {
   'field.paste': 'Colar',
   'field.pasteInto': 'Colar em {label}',
   'field.pasteFailed': 'Não foi possível colar. Permita o acesso à área de transferência.',
+  'field.clear': 'Limpar',
+  'field.clearFrom': 'Limpar {label}',
 
   'tabs.label': 'Tipo de conteúdo',
   'type.url': 'URL',

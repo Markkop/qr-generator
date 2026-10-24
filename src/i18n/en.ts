@@ -17,6 +17,8 @@ export const en: Messages = {
   'field.paste': 'Paste',
   'field.pasteInto': 'Paste into {label}',
   'field.pasteFailed': 'Could not paste. Allow clipboard access and try again.',
+  'field.clear': 'Clear',
+  'field.clearFrom': 'Clear {label}',
 
   'tabs.label': 'Content type',
   'type.url': 'URL',

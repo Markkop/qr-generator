@@ -3,7 +3,7 @@ import { Eye, EyeOff, LocateFixed } from 'lucide-react'
 import { useI18n } from '../i18n/context'
 import type { Message, MessageKey } from '../i18n/messages'
 import type { ContentType, FieldsByType, WifiEncryption } from '../lib/payload/types'
-import { Button, Field, PasteArea, PasteButton, PasteInput, Segmented, Switch, TextInput } from './ui'
+import { Button, Field, FieldActions, PasteArea, PasteInput, Segmented, Switch, TextInput } from './ui'
 import { useToast } from './toast-context'
 
 interface FormProps<T extends ContentType> {
@@ -72,8 +72,8 @@ function PasswordInput({
   const inputRef = useRef<HTMLInputElement>(null)
   const [visible, setVisible] = useState(false)
   return (
-    <div className="flex items-center gap-2">
-      <div className="relative min-w-0 flex-1">
+    <div className="flex flex-wrap items-center justify-end gap-2">
+      <div className="relative min-w-32 flex-1 basis-32">
         <TextInput
           {...rest}
           ref={inputRef}
@@ -93,7 +93,7 @@ function PasswordInput({
           {visible ? <EyeOff className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
         </button>
       </div>
-      <PasteButton control={inputRef} label={label} />
+      <FieldActions control={inputRef} label={label} />
     </div>
   )
 }
