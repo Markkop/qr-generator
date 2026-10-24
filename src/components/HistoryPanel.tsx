@@ -12,7 +12,9 @@ import {
   setPinned,
   type HistoryEntry,
 } from '../lib/db'
-import { CONTENT_TYPES, TYPE_LABELS, type ContentType } from '../lib/payload/types'
+import { useI18n } from '../i18n/context'
+import { AppError } from '../lib/errors'
+import { CONTENT_TYPES, typeLabelKey, type ContentType } from '../lib/payload/types'
 import { renderQr } from '../lib/qr/render'
 import { downloadBlob } from '../lib/export'
 import { Button, Card, Select, Switch, TextInput } from './ui'
@@ -53,15 +55,12 @@ function Thumbnail({ entry }: { entry: HistoryEntry }) {
   )
 }
 
-function formatDate(timestamp: number): string {
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(timestamp)
-}
-
 function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: HistoryEntry) => void }) {
+  const { t, formatDate } = useI18n()
   const toast = useToast()
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(entry.label)
-  const label = entry.label || TYPE_LABELS[entry.type]
+  const label = entry.label || t(typeLabelKey(entry.type))
 
   const commitRename = async () => {
     setEditing(false)
@@ -74,7 +73,7 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
       const { blob } = await renderQr({ payload: entry.payload, style: entry.style, logo }, 1024, 'png')
       downloadBlob(blob, `qr-${entry.type}-${entry.id.slice(0, 8)}.png`)
     } catch {
-      toast('Could not render this code.', 'error')
+      toast(t('history.renderFailed'), 'error')
     }
   }
 
@@ -87,7 +86,7 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
         type="button"
         onClick={() => onOpen(entry)}
         className="rounded-lg focus-visible:outline-2 focus-visible:outline-indigo-500"
-        aria-label={`Open ${label} in editor`}
+        aria-label={t('history.open', { label })}
       >
         <Thumbnail entry={entry} />
       </button>
@@ -101,7 +100,7 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
             }}
           >
             <TextInput
-              aria-label="Name"
+              aria-label={t('history.name')}
               value={draft}
               maxLength={200}
               onChange={(e) => setDraft(e.target.value)}
@@ -114,18 +113,20 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
               className="h-8"
               autoFocus
             />
-            <Button type="submit" size="sm" variant="ghost" aria-label="Save name">
+            <Button type="submit" size="sm" variant="ghost" aria-label={t('history.saveName')}>
               <Check className="size-4" aria-hidden />
             </Button>
           </form>
         ) : (
           <p className="truncate text-sm font-medium" title={label}>
-            {entry.pinned === 1 && <Pin className="mr-1 inline size-3 text-indigo-500" aria-label="Pinned" />}
+            {entry.pinned === 1 && (
+              <Pin className="mr-1 inline size-3 text-indigo-500" aria-label={t('history.pinned')} />
+            )}
             {label}
           </p>
         )}
         <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          {TYPE_LABELS[entry.type]} · {formatDate(entry.updatedAt)}
+          {t(typeLabelKey(entry.type))} · {formatDate(entry.updatedAt)}
         </p>
       </div>
       <div className="flex shrink-0 items-center">
@@ -133,8 +134,8 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
           size="sm"
           variant="ghost"
           onClick={() => onOpen(entry)}
-          aria-label="Open in editor"
-          title="Open in editor"
+          aria-label={t('history.openShort')}
+          title={t('history.openShort')}
         >
           <SquarePen className="size-4" aria-hidden />
         </Button>
@@ -142,8 +143,8 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
           size="sm"
           variant="ghost"
           onClick={download}
-          aria-label="Download PNG"
-          title="Download PNG"
+          aria-label={t('history.downloadPng')}
+          title={t('history.downloadPng')}
           className="max-sm:hidden"
         >
           <Download className="size-4" aria-hidden />
@@ -155,8 +156,8 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
             setDraft(entry.label)
             setEditing(true)
           }}
-          aria-label="Rename"
-          title="Rename"
+          aria-label={t('history.rename')}
+          title={t('history.rename')}
           className="max-sm:hidden"
         >
           <Pencil className="size-4" aria-hidden />
@@ -165,8 +166,8 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
           size="sm"
           variant="ghost"
           onClick={() => setPinned(entry.id, entry.pinned === 0)}
-          aria-label={entry.pinned ? 'Unpin' : 'Pin'}
-          title={entry.pinned ? 'Unpin' : 'Pin'}
+          aria-label={t(entry.pinned ? 'history.unpin' : 'history.pin')}
+          title={t(entry.pinned ? 'history.unpin' : 'history.pin')}
         >
           {entry.pinned ? <PinOff className="size-4" aria-hidden /> : <Pin className="size-4" aria-hidden />}
         </Button>
@@ -175,10 +176,10 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
           variant="danger"
           onClick={async () => {
             await deleteEntry(entry.id)
-            toast('Deleted from history.')
+            toast(t('history.deleted'))
           }}
-          aria-label="Delete"
-          title="Delete"
+          aria-label={t('history.delete')}
+          title={t('history.delete')}
         >
           <Trash2 className="size-4" aria-hidden />
         </Button>
@@ -194,6 +195,7 @@ interface Props {
 }
 
 export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props) {
+  const { t, tn } = useI18n()
   const toast = useToast()
   const importInput = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
@@ -222,14 +224,16 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
     if (!file) return
     try {
       const count = await importHistory(JSON.parse(await file.text()))
-      toast(`Imported ${count} ${count === 1 ? 'code' : 'codes'}.`)
+      toast(tn('history.imported', count))
     } catch (error) {
       toast(
-        error instanceof SyntaxError
-          ? 'That file is not valid JSON.'
-          : error instanceof Error
-            ? error.message
-            : 'Import failed.',
+        t(
+          error instanceof SyntaxError
+            ? 'history.importInvalidJson'
+            : error instanceof AppError
+              ? error.key
+              : 'history.importFailed',
+        ),
         'error',
       )
     } finally {
@@ -238,14 +242,9 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
   }
 
   const onClear = async () => {
-    if (
-      !window.confirm(
-        'Delete every saved QR code? This cannot be undone. Export a backup first if you want to keep them.',
-      )
-    )
-      return
+    if (!window.confirm(t('history.confirmClear'))) return
     await clearHistory()
-    toast('History cleared.')
+    toast(t('history.cleared'))
   }
 
   const total = entries?.length ?? 0
@@ -254,19 +253,17 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
     <Card className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold">History</h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Saved in this browser only. Export a backup to move it to another device.
-          </p>
+          <h2 className="text-base font-semibold">{t('history.title')}</h2>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('history.subtitle')}</p>
         </div>
         <div className="flex flex-wrap items-center gap-1">
           <Button size="sm" variant="ghost" onClick={onExport} disabled={!total}>
             <FileDown className="size-4" aria-hidden />
-            Export
+            {t('history.export')}
           </Button>
           <Button size="sm" variant="ghost" onClick={() => importInput.current?.click()}>
             <FileUp className="size-4" aria-hidden />
-            Import
+            {t('history.import')}
           </Button>
           <input
             ref={importInput}
@@ -279,7 +276,7 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
           />
           <Button size="sm" variant="danger" onClick={onClear} disabled={!total}>
             <Trash2 className="size-4" aria-hidden />
-            Clear all
+            {t('history.clear')}
           </Button>
         </div>
       </div>
@@ -287,8 +284,8 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
       <Switch
         checked={saveHistory}
         onChange={onSaveHistoryChange}
-        label="Save codes automatically"
-        description="Adds a code to history when you download, copy or share it. Turn off for sensitive content like Wi-Fi passwords."
+        label={t('history.autoSave')}
+        description={t('history.autoSaveHint')}
       />
 
       {total > 0 && (
@@ -299,8 +296,8 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
               aria-hidden
             />
             <TextInput
-              aria-label="Search history"
-              placeholder="Search"
+              aria-label={t('history.search')}
+              placeholder={t('history.searchPlaceholder')}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-9"
@@ -309,7 +306,7 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
               <button
                 type="button"
                 onClick={() => setQuery('')}
-                aria-label="Clear search"
+                aria-label={t('history.clearSearch')}
                 className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-zinc-400 hover:text-zinc-700"
               >
                 <X className="size-4" aria-hidden />
@@ -317,15 +314,15 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
             )}
           </div>
           <Select
-            aria-label="Filter by type"
+            aria-label={t('history.filter')}
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value as ContentType | 'all')}
-            className="w-32"
+            className="w-36"
           >
-            <option value="all">All types</option>
+            <option value="all">{t('history.allTypes')}</option>
             {CONTENT_TYPES.map((type) => (
               <option key={type} value={type}>
-                {TYPE_LABELS[type]}
+                {t(typeLabelKey(type))}
               </option>
             ))}
           </Select>
@@ -334,10 +331,10 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
 
       {entries === undefined ? null : total === 0 ? (
         <p className="rounded-xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-          No saved codes yet. Codes you download, copy, share or save show up here.
+          {t('history.empty')}
         </p>
       ) : filtered.length === 0 ? (
-        <p className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">Nothing matches your search.</p>
+        <p className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">{t('history.noMatch')}</p>
       ) : (
         <>
           <ul className={cx('grid grid-cols-1 gap-2 lg:grid-cols-2')}>
@@ -347,7 +344,7 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
           </ul>
           {filtered.length > limit && (
             <Button variant="ghost" className="self-center" onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-              Show more ({filtered.length - limit} left)
+              {t('history.showMore', { count: filtered.length - limit })}
             </Button>
           )}
         </>

@@ -1,6 +1,7 @@
 import { useRef, type KeyboardEvent } from 'react'
 import { AtSign, Contact, Link, MapPin, MessageSquare, Phone, Type, Wifi, type LucideIcon } from 'lucide-react'
-import { CONTENT_TYPES, TYPE_LABELS, type ContentType } from '../lib/payload/types'
+import { useI18n } from '../i18n/context'
+import { CONTENT_TYPES, typeLabelKey, type ContentType } from '../lib/payload/types'
 import { cx } from '../lib/cx'
 import { PANEL_ID, tabId } from './tabs'
 
@@ -16,6 +17,7 @@ const ICONS: Record<ContentType, LucideIcon> = {
 }
 
 export function TypeTabs({ value, onChange }: { value: ContentType; onChange: (type: ContentType) => void }) {
+  const { t } = useI18n()
   const refs = useRef<Partial<Record<ContentType, HTMLButtonElement | null>>>({})
 
   const onKeyDown = (event: KeyboardEvent) => {
@@ -36,7 +38,7 @@ export function TypeTabs({ value, onChange }: { value: ContentType; onChange: (t
   }
 
   return (
-    <div role="tablist" aria-label="Content type" className="grid grid-cols-4 gap-1.5" onKeyDown={onKeyDown}>
+    <div role="tablist" aria-label={t('tabs.label')} className="grid grid-cols-4 gap-1.5" onKeyDown={onKeyDown}>
       {CONTENT_TYPES.map((type) => {
         const Icon = ICONS[type]
         const selected = type === value
@@ -61,7 +63,7 @@ export function TypeTabs({ value, onChange }: { value: ContentType; onChange: (t
             )}
           >
             <Icon className="size-5" aria-hidden />
-            {TYPE_LABELS[type]}
+            {t(typeLabelKey(type))}
           </button>
         )
       })}

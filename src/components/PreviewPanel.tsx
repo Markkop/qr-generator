@@ -11,6 +11,7 @@ import {
   XCircle,
 } from 'lucide-react'
 import type { PreviewState } from '../hooks/useQrPreview'
+import { useI18n } from '../i18n/context'
 import { EXPORT_FORMATS, EXPORT_SIZES, type ExportFormat } from '../lib/qr/render'
 import { densityOf } from '../lib/qr/encode'
 import type { Preferences } from '../lib/prefs'
@@ -38,18 +39,24 @@ interface Props {
 }
 
 function ScanBadge({ state }: { state: Extract<PreviewState, { status: 'ready' }> }) {
+  const { t } = useI18n()
   const { scan } = state
   if (scan.status === 'skipped') return null
   const variants = {
-    checking: { icon: Loader2, text: 'Checking scan...', className: 'text-zinc-500 dark:text-zinc-400', spin: true },
-    match: { icon: CheckCircle2, text: 'Scans OK', className: 'text-emerald-600 dark:text-emerald-400', spin: false },
+    checking: { icon: Loader2, text: t('scan.checking'), className: 'text-zinc-500 dark:text-zinc-400', spin: true },
+    match: {
+      icon: CheckCircle2,
+      text: t('scan.match'),
+      className: 'text-emerald-600 dark:text-emerald-400',
+      spin: false,
+    },
     mismatch: {
       icon: AlertTriangle,
-      text: 'Scans, but the content differs',
+      text: t('scan.mismatch'),
       className: 'text-amber-600 dark:text-amber-400',
       spin: false,
     },
-    unreadable: { icon: XCircle, text: 'May not scan', className: 'text-red-600 dark:text-red-400', spin: false },
+    unreadable: { icon: XCircle, text: t('scan.unreadable'), className: 'text-red-600 dark:text-red-400', spin: false },
   } as const
   const v = variants[scan.status]
   const Icon = v.icon
@@ -66,6 +73,7 @@ function ScanBadge({ state }: { state: Extract<PreviewState, { status: 'ready' }
 }
 
 export function PreviewPanel(props: Props) {
+  const { t } = useI18n()
   const { state, hint, notices, alt, prefs, onPrefsChange } = props
   const ready = state.status === 'ready'
 
@@ -79,12 +87,12 @@ export function PreviewPanel(props: Props) {
             {state.status === 'error' ? (
               <>
                 <XCircle className="size-10 text-red-500" aria-hidden />
-                <p role="alert">{state.message}</p>
+                <p role="alert">{t(state.message)}</p>
               </>
             ) : (
               <>
                 <QrCode className="size-14 text-zinc-300 dark:text-zinc-700" aria-hidden />
-                <p>{hint ?? 'Your QR code will appear here.'}</p>
+                <p>{hint ?? t('preview.placeholder')}</p>
               </>
             )}
           </div>
@@ -94,19 +102,16 @@ export function PreviewPanel(props: Props) {
       {state.status === 'ready' && (
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <ScanBadge state={state} />
-          <span
-            className="text-xs tabular-nums text-zinc-500 dark:text-zinc-400"
-            title="QR version, grid size, content size and error correction level"
-          >
+          <span className="text-xs tabular-nums text-zinc-500 dark:text-zinc-400" title={t('preview.statsTitle')}>
             v{state.analysis.version} · {state.analysis.moduleCount}×{state.analysis.moduleCount} ·{' '}
             {state.analysis.bytes} B · EC {state.ecl}
-            {densityOf(state.analysis.version) !== 'low' && ' · dense'}
+            {densityOf(state.analysis.version) !== 'low' && ` · ${t('preview.dense')}`}
           </span>
         </div>
       )}
 
       {notices.length > 0 && (
-        <ul className="flex flex-col gap-2" aria-label="Warnings">
+        <ul className="flex flex-col gap-2" aria-label={t('preview.warnings')}>
           {notices.map((notice) => (
             <li
               key={notice.message}
@@ -127,18 +132,18 @@ export function PreviewPanel(props: Props) {
       <div className="flex flex-col gap-3">
         <div className="grid grid-cols-[1fr_auto] gap-2">
           <Select
-            aria-label="File format"
+            aria-label={t('export.format')}
             value={prefs.exportFormat}
             onChange={(e) => onPrefsChange({ exportFormat: e.target.value as ExportFormat })}
           >
             {EXPORT_FORMATS.map((f) => (
               <option key={f.value} value={f.value}>
-                {f.label}
+                {t(f.label)}
               </option>
             ))}
           </Select>
           <Select
-            aria-label="Image size"
+            aria-label={t('export.size')}
             value={prefs.exportSize}
             disabled={prefs.exportFormat === 'svg'}
             onChange={(e) => onPrefsChange({ exportSize: Number(e.target.value) })}
@@ -153,36 +158,33 @@ export function PreviewPanel(props: Props) {
         </div>
         <Button variant="primary" disabled={!ready} onClick={props.onDownload}>
           <Download className="size-4" aria-hidden />
-          Download
+          {t('action.download')}
         </Button>
         <div className="grid grid-cols-2 gap-2">
           {props.canCopyImage && (
             <Button disabled={!ready} onClick={props.onCopyImage}>
               <ImageIcon className="size-4" aria-hidden />
-              Copy image
+              {t('action.copyImage')}
             </Button>
           )}
           <Button disabled={!ready} onClick={props.onCopyText} className={cx(!props.canCopyImage && 'col-span-2')}>
             <ClipboardCopy className="size-4" aria-hidden />
-            Copy content
+            {t('action.copyContent')}
           </Button>
           {props.onShare && (
             <Button disabled={!ready} onClick={props.onShare}>
               <Share2 className="size-4" aria-hidden />
-              Share
+              {t('action.share')}
             </Button>
           )}
           <Button disabled={!ready} onClick={props.onSave} className={cx(!props.onShare && 'col-span-2')}>
             <BookmarkPlus className="size-4" aria-hidden />
-            Save to history
+            {t('action.save')}
           </Button>
         </div>
       </div>
 
-      <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
-        For print, use SVG and keep the code at least 2 cm wide. A good rule is width = scanning distance ÷ 10. Always
-        test a print with a couple of phones.
-      </p>
+      <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{t('preview.printTip')}</p>
     </Card>
   )
 }

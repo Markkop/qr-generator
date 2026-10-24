@@ -4,4 +4,5 @@ try {
   if (theme === 'dark' || (theme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.documentElement.classList.add('dark')
   }
+  if (localStorage.getItem('qr-generator:locale') === 'en') document.documentElement.lang = 'en'
 } catch {}

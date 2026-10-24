@@ -1,3 +1,4 @@
+import type { MessageKey } from '../i18n/messages'
 import { useEffect, useState } from 'react'
 import { CapacityError, type Analysis, type ErrorCorrection } from '../lib/qr/encode'
 import { renderQr, type RenderInput } from '../lib/qr/render'
@@ -15,7 +16,7 @@ export type ReadyPreview = {
   scan: ScanResult | { status: 'checking' } | { status: 'skipped' }
 }
 
-export type PreviewState = { status: 'empty' } | { status: 'error'; message: string } | ReadyPreview
+export type PreviewState = { status: 'empty' } | { status: 'error'; message: MessageKey } | ReadyPreview
 
 const DEBOUNCE_MS = 150
 
@@ -48,10 +49,7 @@ export function useQrPreview(input: RenderInput | null): PreviewState {
         if (cancelled) return
         setState({
           status: 'error',
-          message:
-            error instanceof CapacityError
-              ? 'Too much content for one QR code. Shorten it or lower the error correction level.'
-              : 'Could not render this QR code.',
+          message: error instanceof CapacityError ? 'preview.tooLong' : 'preview.renderFailed',
         })
       }
     }, DEBOUNCE_MS)

@@ -58,13 +58,6 @@ export const DEFAULT_FIELDS: AllFields = {
   location: { latitude: '', longitude: '' },
 }
 
-export const TYPE_LABELS: Record<ContentType, string> = {
-  url: 'URL',
-  text: 'Text',
-  wifi: 'Wi-Fi',
-  email: 'Email',
-  phone: 'Phone',
-  sms: 'SMS',
-  contact: 'Contact',
-  location: 'Location',
+export function typeLabelKey<T extends ContentType>(type: T) {
+  return `type.${type}` as const
 }

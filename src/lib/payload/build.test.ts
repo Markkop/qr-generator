@@ -30,7 +30,7 @@ group('url', () => {
 
   it('warns on http and missing dots', () => {
     expect(buildPayload('url', { url: 'http://example.com' }).warnings).toHaveLength(1)
-    expect(buildPayload('url', { url: 'intranet' }).warnings[0]).toMatch(/no dot/)
+    expect(buildPayload('url', { url: 'intranet' }).warnings[0]?.key).toBe('warn.noDot')
   })
 
   it('returns a hint while empty', () => {
@@ -178,6 +178,8 @@ group('location', () => {
   })
 
   it('detects swapped coordinates', () => {
-    expect(buildPayload('location', { latitude: '-122.08', longitude: '37.42' }).errors.latitude).toMatch(/swapped/)
+    expect(buildPayload('location', { latitude: '-122.08', longitude: '37.42' }).errors.latitude?.key).toBe(
+      'error.latitudeSwapped',
+    )
   })
 })

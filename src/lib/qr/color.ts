@@ -1,3 +1,5 @@
+import type { Message } from '../../i18n/messages'
+
 export function parseHex(hex: string): [number, number, number] | null {
   const match = /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim())
   if (!match) return null
@@ -23,25 +25,21 @@ export function contrastRatio(a: string, b: string): number {
 
 export interface ColorCheck {
   level: 'ok' | 'warn' | 'bad'
-  message?: string
+  message?: Message
 }
+
+const round = (value: number) => Math.round(value * 10) / 10
 
 export function checkColors(foreground: string, background: string): ColorCheck {
   const ratio = contrastRatio(foreground, background)
   if (ratio < 2.5) {
-    return {
-      level: 'bad',
-      message: `Contrast is very low (${ratio.toFixed(1)}:1). Most phones will not read this code.`,
-    }
+    return { level: 'bad', message: { key: 'warn.contrastVeryLow', params: { ratio: round(ratio) } } }
   }
   if (luminance(foreground) > luminance(background)) {
-    return { level: 'warn', message: 'Light code on a dark background. Some scanner apps cannot read inverted codes.' }
+    return { level: 'warn', message: { key: 'warn.inverted' } }
   }
   if (ratio < 4) {
-    return {
-      level: 'warn',
-      message: `Contrast is low (${ratio.toFixed(1)}:1). Aim for 4:1 or more, ideally a dark code on white.`,
-    }
+    return { level: 'warn', message: { key: 'warn.contrastLow', params: { ratio: round(ratio) } } }
   }
   return { level: 'ok' }
 }

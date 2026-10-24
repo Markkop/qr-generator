@@ -7,28 +7,38 @@ import { StylePanel } from './components/StylePanel'
 import { useToast } from './components/toast-context'
 import { TypeTabs } from './components/TypeTabs'
 import { PANEL_ID, tabId } from './components/tabs'
+import { LanguageSelect } from './components/LanguageSelect'
+import { SiteBottomBar } from './components/SiteBottomBar'
 import { Button, Card } from './components/ui'
 import { useQrPreview } from './hooks/useQrPreview'
+import { useI18n } from './i18n/context'
+import type { Message, MessageKey } from './i18n/messages'
 import { getLogo, requestPersistentStorage, saveEntry, type HistoryEntry } from './lib/db'
 import { canCopyImage, canShareFiles, copyImage, copyText, downloadBlob, fileName, shareImage } from './lib/export'
 import { buildPayload, describe } from './lib/payload/build'
-import { DEFAULT_FIELDS, TYPE_LABELS, type AllFields, type ContentType, type FieldsByType } from './lib/payload/types'
+import { DEFAULT_FIELDS, typeLabelKey, type AllFields, type ContentType, type FieldsByType } from './lib/payload/types'
 import { checkColors } from './lib/qr/color'
 import { densityOf } from './lib/qr/encode'
 import { renderQr } from './lib/qr/render'
 import { DEFAULT_STYLE, resolveErrorCorrection, sanitizeStyle, type QrStyle } from './lib/qr/style'
 import { useApplyTheme, usePreferences, type Theme } from './lib/prefs'
 
-const THEME_CYCLE: Record<Theme, { next: Theme; icon: typeof Sun; label: string }> = {
-  system: { next: 'light', icon: Monitor, label: 'Theme: system' },
-  light: { next: 'dark', icon: Sun, label: 'Theme: light' },
-  dark: { next: 'system', icon: Moon, label: 'Theme: dark' },
+const THEME_CYCLE: Record<Theme, { next: Theme; icon: typeof Sun; label: MessageKey }> = {
+  system: { next: 'light', icon: Monitor, label: 'theme.system' },
+  light: { next: 'dark', icon: Sun, label: 'theme.light' },
+  dark: { next: 'system', icon: Moon, label: 'theme.dark' },
+}
+
+interface NoticeMessage {
+  level: Notice['level']
+  message: Message
 }
 
 const COPY_SUPPORTED = canCopyImage()
 const SHARE_SUPPORTED = canShareFiles()
 
 export default function App() {
+  const { t, tm } = useI18n()
   const toast = useToast()
   const [prefs, updatePrefs] = usePreferences()
   useApplyTheme(prefs.theme)
@@ -49,7 +59,7 @@ export default function App() {
   const description = describe(type, current)
 
   const notices = useMemo(() => {
-    const list: Notice[] = built.warnings.map((message) => ({ level: 'warn', message }))
+    const list: NoticeMessage[] = built.warnings.map((message) => ({ level: 'warn', message }))
     const colors = checkColors(style.foreground, style.background)
     if (colors.message) list.push({ level: colors.level === 'bad' ? 'bad' : 'warn', message: colors.message })
     if (style.cornerColor) {
@@ -57,39 +67,38 @@ export default function App() {
       if (corners.level === 'bad')
         list.push({
           level: 'bad',
-          message: 'The corner color barely contrasts with the background. Scanners locate the code by those corners.',
+          message: { key: 'warn.cornerContrast' },
         })
     }
     if (style.quietZone < 4)
       list.push({
         level: 'warn',
-        message: 'The QR spec asks for a 4-module margin. Smaller margins can fail next to other artwork.',
+        message: { key: 'warn.quietZone' },
       })
     const ecl = resolveErrorCorrection(style, Boolean(logo))
     if (logo && (ecl === 'L' || ecl === 'M'))
       list.push({
         level: 'warn',
-        message: `A logo with error correction ${ecl} leaves little room for damage. Use Q or H.`,
+        message: { key: 'warn.logoEcl', params: { ecl } },
       })
     if (preview.status === 'ready') {
       const density = densityOf(preview.analysis.version)
-      if (density === 'medium')
-        list.push({ level: 'warn', message: 'This is a dense code. Print it larger, or shorten the content.' })
+      if (density === 'medium') list.push({ level: 'warn', message: { key: 'warn.dense' } })
       if (density === 'high')
         list.push({
           level: 'bad',
-          message: 'This code is very dense and will be hard to scan. Shorten the content if you can.',
+          message: { key: 'warn.veryDense' },
         })
       if (preview.scan.status === 'unreadable')
         list.push({
           level: 'bad',
-          message: 'Our scanner could not read this code. Increase contrast, shrink the logo or pick simpler shapes.',
+          message: { key: 'warn.unreadable' },
         })
-      if (preview.scan.status === 'mismatch')
-        list.push({ level: 'bad', message: 'The code scans, but returns different content than expected.' })
+      if (preview.scan.status === 'mismatch') list.push({ level: 'bad', message: { key: 'warn.mismatch' } })
     }
     return list
   }, [built.warnings, style, logo, preview])
+  const translatedNotices = notices.map(({ level, message }) => ({ level, message: tm(message) }))
 
   const updateFields = useCallback(
     <T extends ContentType>(patch: Partial<FieldsByType[T]>) =>
@@ -107,9 +116,9 @@ export default function App() {
         persistRequested.current = true
         void requestPersistentStorage()
       }
-      if (force) toast('Saved to history.')
+      if (force) toast(t('toast.saved'))
     } catch {
-      toast('Could not save to history. Storage may be full or disabled.', 'error')
+      toast(t('toast.saveFailed'), 'error')
     }
   }
 
@@ -118,10 +127,10 @@ export default function App() {
     try {
       const { blob } = await renderQr({ payload: ready.payload, style, logo }, prefs.exportSize, prefs.exportFormat)
       downloadBlob(blob, fileName(type, description, prefs.exportFormat))
-      toast('Downloaded.')
+      toast(t('toast.downloaded'))
       void record()
     } catch {
-      toast('Download failed.', 'error')
+      toast(t('toast.downloadFailed'), 'error')
     }
   }
 
@@ -129,29 +138,29 @@ export default function App() {
     if (!ready) return
     copyImage(Promise.resolve(ready.blob))
       .then(() => {
-        toast('Image copied.')
+        toast(t('toast.imageCopied'))
         void record()
       })
-      .catch(() => toast('Your browser blocked copying images. Use Download instead.', 'error'))
+      .catch(() => toast(t('toast.copyImageBlocked'), 'error'))
   }
 
   const onCopyText = () => {
     if (!ready) return
     copyText(ready.payload)
       .then(() => {
-        toast('Content copied.')
+        toast(t('toast.contentCopied'))
         void record()
       })
-      .catch(() => toast('Could not copy to the clipboard.', 'error'))
+      .catch(() => toast(t('toast.copyFailed'), 'error'))
   }
 
   const onShare = () => {
     if (!ready) return
-    shareImage(ready.blob, fileName(type, description, 'png'), `${TYPE_LABELS[type]} QR code`)
+    shareImage(ready.blob, fileName(type, description, 'png'), t('share.title', { type: t(typeLabelKey(type)) }))
       .then((outcome) => {
         if (outcome === 'shared') void record()
       })
-      .catch(() => toast('Sharing failed.', 'error'))
+      .catch(() => toast(t('toast.shareFailed'), 'error'))
   }
 
   const onOpen = async (entry: HistoryEntry) => {
@@ -163,42 +172,45 @@ export default function App() {
       top: 0,
       behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
     })
-    toast('Loaded into the editor.')
+    toast(t('toast.loaded'))
   }
 
   const theme = THEME_CYCLE[prefs.theme]
   const ThemeIcon = theme.icon
 
   return (
-    <div className="min-h-dvh bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <div className="flex min-h-dvh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:shadow"
       >
-        Skip to content
+        {t('app.skip')}
       </a>
-      <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
         <div className="flex items-center gap-2.5">
           <span className="flex size-9 items-center justify-center rounded-xl bg-indigo-600 text-white">
             <QrCode className="size-5" aria-hidden />
           </span>
           <div>
-            <h1 className="text-lg leading-tight font-semibold">QR Generator</h1>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Free, private, works offline</p>
+            <h1 className="text-lg leading-tight font-semibold">{t('app.name')}</h1>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('app.tagline')}</p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => updatePrefs({ theme: theme.next })}
-          aria-label={`${theme.label}. Switch theme.`}
-          title={theme.label}
-        >
-          <ThemeIcon className="size-4" aria-hidden />
-        </Button>
+        <div className="flex items-center gap-1">
+          <LanguageSelect />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => updatePrefs({ theme: theme.next })}
+            aria-label={t('theme.switch', { current: t(theme.label) })}
+            title={t(theme.label)}
+          >
+            <ThemeIcon className="size-4" aria-hidden />
+          </Button>
+        </div>
       </header>
 
-      <main id="main" className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-16 sm:px-6">
+      <main id="main" className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pb-10 sm:px-6">
         <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:grid-rows-[auto_1fr]">
           <Card className="flex flex-col gap-5">
             <TypeTabs value={type} onChange={setType} />
@@ -210,9 +222,9 @@ export default function App() {
           <div className="lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
             <PreviewPanel
               state={preview}
-              hint={built.hint}
-              notices={notices}
-              alt={`QR code for ${TYPE_LABELS[type]}: ${description}`}
+              hint={built.hint && tm(built.hint)}
+              notices={translatedNotices}
+              alt={t('preview.alt', { type: t(typeLabelKey(type)), description })}
               prefs={prefs}
               onPrefsChange={updatePrefs}
               onDownload={onDownload}
@@ -243,14 +255,11 @@ export default function App() {
         />
       </main>
 
-      <footer className="mx-auto max-w-6xl px-4 pb-10 text-center text-xs text-zinc-500 sm:px-6 dark:text-zinc-400">
-        Everything runs in your browser. Nothing you type is uploaded, and there is no tracking.{' '}
-        <a
-          href="https://github.com/Markkop/qr-generator"
-          className="underline underline-offset-2 hover:text-zinc-800 dark:hover:text-zinc-200"
-        >
-          Source on GitHub
-        </a>
+      <footer>
+        <p className="mx-auto max-w-6xl px-4 pb-6 text-center text-xs text-zinc-500 sm:px-6 dark:text-zinc-400">
+          {t('footer.privacy')}
+        </p>
+        <SiteBottomBar />
       </footer>
     </div>
   )

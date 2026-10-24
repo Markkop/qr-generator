@@ -1,3 +1,5 @@
+import { AppError } from './errors'
+
 const MAX_SIDE = 512
 const MAX_SVG_BYTES = 256 * 1024
 const MAX_INPUT_BYTES = 10 * 1024 * 1024
@@ -13,10 +15,10 @@ function readAsDataUrl(file: Blob): Promise<string> {
 
 /** Downscales raster logos so history stays small. SVGs are kept as-is. */
 export async function prepareLogo(file: File): Promise<string> {
-  if (!file.type.startsWith('image/')) throw new Error('Pick an image file (PNG, JPEG, SVG, WebP or GIF).')
-  if (file.size > MAX_INPUT_BYTES) throw new Error('That image is larger than 10 MB.')
+  if (!file.type.startsWith('image/')) throw new AppError('logo.errorType')
+  if (file.size > MAX_INPUT_BYTES) throw new AppError('logo.errorSize')
   if (file.type === 'image/svg+xml') {
-    if (file.size > MAX_SVG_BYTES) throw new Error('SVG logos must be under 256 KB.')
+    if (file.size > MAX_SVG_BYTES) throw new AppError('logo.errorSvg')
     return readAsDataUrl(file)
   }
   const bitmap = await createImageBitmap(file)

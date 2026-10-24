@@ -13,6 +13,7 @@ Everything runs in the browser. There is no backend, no account and no tracking.
 - Colors, dot and corner shapes, and a center logo. Logos are downscaled and stored locally.
 - Export to PNG, JPEG or WebP at 256 to 2048 px, or to SVG for print. Copy the image or the raw content, or use the share sheet on mobile.
 - History with search, type filter, pin, rename, delete and "open in editor". Identical codes are stored once. JSON export and import let you back it up or move it to another device.
+- Brazilian Portuguese (default) and English, switchable from the header. The choice is saved in the browser.
 - Installable PWA with dark mode, keyboard navigation and screen reader labels.
 
 ## Stack
@@ -39,6 +40,7 @@ The first e2e run needs a browser: `pnpm exec playwright install chromium`.
 src/lib/payload   content types and payload builders (pure, unit tested)
 src/lib/qr        encoding, styling, rendering and the scan check
 src/lib/db.ts     history storage, pruning, export and import
+src/i18n          dictionaries (pt-BR is the source of truth for keys) and the translator
 src/components    UI
 e2e               Playwright tests, including a scan round trip for every type
 ```

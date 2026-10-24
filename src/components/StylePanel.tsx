@@ -12,6 +12,8 @@ import {
   resolveErrorCorrection,
   type QrStyle,
 } from '../lib/qr/style'
+import { useI18n } from '../i18n/context'
+import { AppError } from '../lib/errors'
 import { prepareLogo } from '../lib/logo'
 import { Button, ColorInput, Field, Segmented, Select, Switch } from './ui'
 import { useToast } from './toast-context'
@@ -66,6 +68,7 @@ function Slider({
 }
 
 export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }: Props) {
+  const { t, tn } = useI18n()
   const fileInput = useRef<HTMLInputElement>(null)
   const toast = useToast()
   const effectiveEcl = resolveErrorCorrection(style, Boolean(logo))
@@ -75,7 +78,7 @@ export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }
     try {
       onLogoChange(await prepareLogo(file))
     } catch (error) {
-      toast(error instanceof Error ? error.message : 'Could not load that image.', 'error')
+      toast(t(error instanceof AppError ? error.key : 'logo.errorLoad'), 'error')
     } finally {
       if (fileInput.current) fileInput.current.value = ''
     }
@@ -85,10 +88,8 @@ export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }
     <details className="group rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
       <summary className="flex cursor-pointer list-none items-center justify-between rounded-2xl p-4 select-none sm:px-5 [&::-webkit-details-marker]:hidden">
         <span>
-          <span className="block text-base font-semibold">Style</span>
-          <span className="block text-xs text-zinc-500 dark:text-zinc-400">
-            Colors, shapes, logo and error correction
-          </span>
+          <span className="block text-base font-semibold">{t('style.title')}</span>
+          <span className="block text-xs text-zinc-500 dark:text-zinc-400">{t('style.subtitle')}</span>
         </span>
         <ChevronDown className="size-5 text-zinc-500 transition-transform group-open:rotate-180" aria-hidden />
       </summary>
@@ -96,12 +97,12 @@ export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }
       <div className="flex flex-col gap-5 border-t border-zinc-200 p-4 sm:p-5 dark:border-zinc-800">
         <div className="grid grid-cols-2 gap-4">
           <ColorInput
-            label="Code color"
+            label={t('style.foreground')}
             value={style.foreground}
             onChange={(foreground) => onStyleChange({ foreground })}
           />
           <ColorInput
-            label="Background"
+            label={t('style.background')}
             value={style.background}
             onChange={(background) => onStyleChange({ background })}
           />
@@ -110,45 +111,45 @@ export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }
         <Switch
           checked={style.cornerColor !== null}
           onChange={(on) => onStyleChange({ cornerColor: on ? style.foreground : null })}
-          label="Different corner color"
-          description="Brand color on the three corner squares only."
+          label={t('style.cornerToggle')}
+          description={t('style.cornerHint')}
         />
         {style.cornerColor !== null && (
           <ColorInput
-            label="Corner color"
+            label={t('style.cornerColor')}
             value={style.cornerColor}
             onChange={(cornerColor) => onStyleChange({ cornerColor })}
           />
         )}
 
         <Segmented
-          label="Dots"
+          label={t('style.dots')}
           value={style.dotStyle}
-          options={DOT_STYLES}
+          options={DOT_STYLES.map((o) => ({ value: o.value, label: t(o.label) }))}
           onChange={(dotStyle) => onStyleChange({ dotStyle })}
         />
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <Segmented
-            label="Corner frame"
+            label={t('style.cornerFrame')}
             value={style.cornerSquareStyle}
-            options={CORNER_SQUARE_STYLES}
+            options={CORNER_SQUARE_STYLES.map((o) => ({ value: o.value, label: t(o.label) }))}
             onChange={(cornerSquareStyle) => onStyleChange({ cornerSquareStyle })}
           />
           <Segmented
-            label="Corner center"
+            label={t('style.cornerCenter')}
             value={style.cornerDotStyle}
-            options={CORNER_DOT_STYLES}
+            options={CORNER_DOT_STYLES.map((o) => ({ value: o.value, label: t(o.label) }))}
             onChange={(cornerDotStyle) => onStyleChange({ cornerDotStyle })}
           />
         </div>
 
         <div className="flex flex-col gap-3">
-          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Logo</span>
+          <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">{t('logo.title')}</span>
           <div className="flex items-center gap-3">
             {logo ? (
               <img
                 src={logo}
-                alt="Selected logo"
+                alt={t('logo.selected')}
                 className="size-12 rounded-lg border border-zinc-200 bg-white object-contain p-1 dark:border-zinc-700"
               />
             ) : (
@@ -166,63 +167,62 @@ export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }
               onChange={(e) => onFile(e.target.files?.[0])}
             />
             <Button size="sm" onClick={() => fileInput.current?.click()}>
-              {logo ? 'Replace' : 'Upload logo'}
+              {logo ? t('logo.replace') : t('logo.upload')}
             </Button>
             {logo && (
               <Button size="sm" variant="danger" onClick={() => onLogoChange(null)}>
                 <Trash2 className="size-3.5" aria-hidden />
-                Remove
+                {t('logo.remove')}
               </Button>
             )}
           </div>
           {logo && (
             <Slider
-              label="Logo size"
+              label={t('logo.size')}
               value={style.logoSize}
               min={MIN_LOGO_SIZE}
               max={MAX_LOGO_SIZE}
               step={0.01}
-              format={(v) => `${Math.round(v * 100)}% width`}
+              format={(v) => t('logo.sizeValue', { percent: Math.round(v * 100) })}
               onChange={(logoSize) => onStyleChange({ logoSize })}
             />
           )}
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            The logo stays on your device. It goes in the center, with error correction raised to H.
-          </p>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('logo.note')}</p>
         </div>
 
-        <Field
-          label="Error correction"
-          hint={`In use: ${effectiveEcl}. Higher levels survive damage and logos but make the code denser.`}
-        >
+        <Field label={t('ecl.label')} hint={t('ecl.hint', { ecl: effectiveEcl })}>
           {(p) => (
             <Select
               {...p}
               value={style.errorCorrection}
               onChange={(e) => onStyleChange({ errorCorrection: e.target.value as QrStyle['errorCorrection'] })}
             >
-              <option value="auto">Auto (M, or H with a logo)</option>
-              <option value="L">L: recovers about 7%</option>
-              <option value="M">M: recovers about 15%</option>
-              <option value="Q">Q: recovers about 25%</option>
-              <option value="H">H: recovers about 30%</option>
+              <option value="auto">{t('ecl.auto')}</option>
+              {(['L', 'M', 'Q', 'H'] as const).map((level) => (
+                <option key={level} value={level}>
+                  {t(`ecl.${level}`)}
+                </option>
+              ))}
             </Select>
           )}
         </Field>
 
         <Slider
-          label="Quiet zone (margin)"
+          label={t('quiet.label')}
           value={style.quietZone}
           min={MIN_QUIET_ZONE}
           max={MAX_QUIET_ZONE}
           step={1}
-          format={(v) => `${v} module${v === 1 ? '' : 's'}${v === DEFAULT_STYLE.quietZone ? ' (spec)' : ''}`}
+          format={(v) => {
+            const value = tn('quiet.value', v)
+            return v === DEFAULT_STYLE.quietZone ? t('quiet.spec', { value }) : value
+          }}
           onChange={(quietZone) => onStyleChange({ quietZone })}
         />
 
         <Button variant="ghost" size="sm" className="self-start" onClick={onReset}>
           <RotateCcw className="size-3.5" aria-hidden />
-          Reset style
+          {t('style.reset')}
         </Button>
       </div>
     </details>

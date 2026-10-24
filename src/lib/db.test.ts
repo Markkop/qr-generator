@@ -91,6 +91,6 @@ describe('history', () => {
   })
 
   it('rejects files that are not backups', async () => {
-    await expect(importHistory({ foo: 1 }, database)).rejects.toThrow(/not a QR Generator backup/)
+    await expect(importHistory({ foo: 1 }, database)).rejects.toMatchObject({ key: 'history.importNotBackup' })
   })
 })

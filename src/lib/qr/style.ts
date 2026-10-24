@@ -1,3 +1,4 @@
+import type { MessageKey } from '../../i18n/messages'
 import type { ErrorCorrection } from './encode'
 
 export type DotStyle = 'square' | 'rounded' | 'dots' | 'classy' | 'classy-rounded' | 'extra-rounded'
@@ -37,24 +38,24 @@ export const MAX_QUIET_ZONE = 8
 export const MIN_LOGO_SIZE = 0.12
 export const MAX_LOGO_SIZE = 0.35
 
-export const DOT_STYLES: { value: DotStyle; label: string }[] = [
-  { value: 'square', label: 'Square' },
-  { value: 'rounded', label: 'Rounded' },
-  { value: 'extra-rounded', label: 'Extra rounded' },
-  { value: 'dots', label: 'Dots' },
-  { value: 'classy', label: 'Classy' },
-  { value: 'classy-rounded', label: 'Classy rounded' },
+export const DOT_STYLES: { value: DotStyle; label: MessageKey }[] = [
+  { value: 'square', label: 'dot.square' },
+  { value: 'rounded', label: 'dot.rounded' },
+  { value: 'extra-rounded', label: 'dot.extraRounded' },
+  { value: 'dots', label: 'dot.dots' },
+  { value: 'classy', label: 'dot.classy' },
+  { value: 'classy-rounded', label: 'dot.classyRounded' },
 ]
 
-export const CORNER_SQUARE_STYLES: { value: CornerSquareStyle; label: string }[] = [
-  { value: 'square', label: 'Square' },
-  { value: 'extra-rounded', label: 'Rounded' },
-  { value: 'dot', label: 'Circle' },
+export const CORNER_SQUARE_STYLES: { value: CornerSquareStyle; label: MessageKey }[] = [
+  { value: 'square', label: 'corner.square' },
+  { value: 'extra-rounded', label: 'corner.rounded' },
+  { value: 'dot', label: 'corner.circle' },
 ]
 
-export const CORNER_DOT_STYLES: { value: CornerDotStyle; label: string }[] = [
-  { value: 'square', label: 'Square' },
-  { value: 'dot', label: 'Circle' },
+export const CORNER_DOT_STYLES: { value: CornerDotStyle; label: MessageKey }[] = [
+  { value: 'square', label: 'corner.square' },
+  { value: 'dot', label: 'corner.circle' },
 ]
 
 export function resolveErrorCorrection(style: QrStyle, hasLogo: boolean): ErrorCorrection {

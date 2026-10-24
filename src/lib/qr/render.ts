@@ -1,14 +1,15 @@
+import type { MessageKey } from '../../i18n/messages'
 import QRCodeStyling, { type Options } from 'qr-code-styling'
 import { analyze, type Analysis, type ErrorCorrection } from './encode'
 import { resolveErrorCorrection, type QrStyle } from './style'
 
 export type ExportFormat = 'png' | 'svg' | 'jpeg' | 'webp'
 
-export const EXPORT_FORMATS: { value: ExportFormat; label: string; mime: string }[] = [
-  { value: 'png', label: 'PNG', mime: 'image/png' },
-  { value: 'svg', label: 'SVG (vector, best for print)', mime: 'image/svg+xml' },
-  { value: 'jpeg', label: 'JPEG', mime: 'image/jpeg' },
-  { value: 'webp', label: 'WebP', mime: 'image/webp' },
+export const EXPORT_FORMATS: { value: ExportFormat; label: MessageKey; mime: string }[] = [
+  { value: 'png', label: 'format.png', mime: 'image/png' },
+  { value: 'svg', label: 'format.svg', mime: 'image/svg+xml' },
+  { value: 'jpeg', label: 'format.jpeg', mime: 'image/jpeg' },
+  { value: 'webp', label: 'format.webp', mime: 'image/webp' },
 ]
 
 export const EXPORT_SIZES = [256, 512, 1024, 2048] as const

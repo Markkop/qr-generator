@@ -1,12 +1,13 @@
+import type { Message, MessageKey } from '../../i18n/messages'
 import type { ContentType, FieldsByType } from './types'
 
 export interface BuildResult {
   /** Null while required fields are missing or a field is invalid. */
   payload: string | null
-  errors: Record<string, string>
-  warnings: string[]
+  errors: Record<string, Message>
+  warnings: Message[]
   /** Shown in the preview while there is nothing to encode yet. */
-  hint?: string
+  hint?: Message
 }
 
 const SCHEME_RE = /^[a-z][a-z0-9+.-]*:/i
@@ -41,46 +42,48 @@ export function formatCoordinate(value: number): string {
   return value.toFixed(7).replace(/\.?0+$/, '')
 }
 
+const msg = (key: MessageKey): Message => ({ key })
+
 function result(payload: string | null, extra: Partial<BuildResult> = {}): BuildResult {
   return { payload, errors: {}, warnings: [], ...extra }
 }
 
 function buildUrl({ url }: FieldsByType['url']): BuildResult {
   const normalized = normalizeUrl(url)
-  if (!normalized) return result(null, { hint: 'Enter a URL to generate a QR code.' })
+  if (!normalized) return result(null, { hint: msg('hint.url') })
   let parsed: URL
   try {
     parsed = new URL(normalized)
   } catch {
-    return result(null, { errors: { url: 'That does not look like a valid URL.' } })
+    return result(null, { errors: { url: msg('error.url') } })
   }
-  const warnings: string[] = []
+  const warnings: Message[] = []
   if (parsed.protocol === 'http:') {
-    warnings.push('This link uses http://. Many phones flag insecure links, so use https:// if the site supports it.')
+    warnings.push(msg('warn.http'))
   }
   if (
     (parsed.protocol === 'http:' || parsed.protocol === 'https:') &&
     !parsed.hostname.includes('.') &&
     parsed.hostname !== 'localhost'
   ) {
-    warnings.push('The domain has no dot in it. Double-check the address.')
+    warnings.push(msg('warn.noDot'))
   }
   return result(normalized, { warnings })
 }
 
 function buildText({ text }: FieldsByType['text']): BuildResult {
-  if (!text) return result(null, { hint: 'Type some text to generate a QR code.' })
+  if (!text) return result(null, { hint: msg('hint.text') })
   return result(text)
 }
 
 function buildWifi({ ssid, password, encryption, hidden }: FieldsByType['wifi']): BuildResult {
-  if (!ssid) return result(null, { hint: 'Enter the network name (SSID).' })
-  const errors: Record<string, string> = {}
+  if (!ssid) return result(null, { hint: msg('hint.wifiSsid') })
+  const errors: Record<string, Message> = {}
   if (encryption !== 'nopass' && !password) {
-    return result(null, { hint: 'Enter the network password, or pick "No password".' })
+    return result(null, { hint: msg('hint.wifiPassword') })
   }
   if (encryption === 'WPA' && password.length > 0 && (password.length < 8 || password.length > 63)) {
-    errors.password = 'WPA passwords are 8 to 63 characters.'
+    errors.password = msg('error.wpaLength')
   }
   if (Object.keys(errors).length) return result(null, { errors })
   const parts = [`T:${encryption}`, `S:${escapeWifi(ssid)}`]
@@ -91,9 +94,9 @@ function buildWifi({ ssid, password, encryption, hidden }: FieldsByType['wifi'])
 
 function buildEmail({ to, subject, body }: FieldsByType['email']): BuildResult {
   const address = to.trim()
-  if (!address) return result(null, { hint: 'Enter an email address.' })
+  if (!address) return result(null, { hint: msg('hint.email') })
   if (!EMAIL_RE.test(address)) {
-    return result(null, { errors: { to: 'That does not look like a valid email address.' } })
+    return result(null, { errors: { to: msg('error.email') } })
   }
   const query = [
     subject && `subject=${encodeURIComponent(subject)}`,
@@ -102,26 +105,24 @@ function buildEmail({ to, subject, body }: FieldsByType['email']): BuildResult {
   return result(`mailto:${address}${query.length ? `?${query.join('&')}` : ''}`)
 }
 
-function phoneWarnings(number: string): string[] {
-  return number.startsWith('+')
-    ? []
-    : ['Add the country code (for example +1 or +55) so the number works from any country.']
+function phoneWarnings(number: string): Message[] {
+  return number.startsWith('+') ? [] : [msg('warn.countryCode')]
 }
 
 function buildPhone({ number }: FieldsByType['phone']): BuildResult {
   const normalized = normalizePhone(number)
-  if (!normalized) return result(null, { hint: 'Enter a phone number.' })
+  if (!normalized) return result(null, { hint: msg('hint.phone') })
   if (normalized.replace(/\D/g, '').length < 3) {
-    return result(null, { errors: { number: 'That phone number is too short.' } })
+    return result(null, { errors: { number: msg('error.phoneShort') } })
   }
   return result(`tel:${normalized}`, { warnings: phoneWarnings(normalized) })
 }
 
 function buildSms({ number, message }: FieldsByType['sms']): BuildResult {
   const normalized = normalizePhone(number)
-  if (!normalized) return result(null, { hint: 'Enter the phone number to text.' })
+  if (!normalized) return result(null, { hint: msg('hint.sms') })
   if (normalized.replace(/\D/g, '').length < 3) {
-    return result(null, { errors: { number: 'That phone number is too short.' } })
+    return result(null, { errors: { number: msg('error.phoneShort') } })
   }
   return result(`SMSTO:${normalized}:${message}`, { warnings: phoneWarnings(normalized) })
 }
@@ -131,10 +132,10 @@ function buildContact(f: FieldsByType['contact']): BuildResult {
   const last = f.lastName.trim()
   const org = f.organization.trim()
   const fullName = [first, last].filter(Boolean).join(' ') || org
-  if (!fullName) return result(null, { hint: 'Enter a name or organization.' })
+  if (!fullName) return result(null, { hint: msg('hint.contact') })
 
-  const errors: Record<string, string> = {}
-  if (f.email.trim() && !EMAIL_RE.test(f.email.trim())) errors.email = 'That does not look like a valid email address.'
+  const errors: Record<string, Message> = {}
+  if (f.email.trim() && !EMAIL_RE.test(f.email.trim())) errors.email = msg('error.email')
   if (Object.keys(errors).length) return result(null, { errors })
 
   const e = escapeVCard
@@ -153,15 +154,15 @@ function buildContact(f: FieldsByType['contact']): BuildResult {
 
 function buildLocation({ latitude, longitude }: FieldsByType['location']): BuildResult {
   if (!latitude.trim() || !longitude.trim()) {
-    return result(null, { hint: 'Enter a latitude and longitude, or use your current location.' })
+    return result(null, { hint: msg('hint.location') })
   }
   const lat = Number(latitude.replace(',', '.'))
   const lon = Number(longitude.replace(',', '.'))
-  const errors: Record<string, string> = {}
-  if (!Number.isFinite(lat) || lat < -90 || lat > 90) errors.latitude = 'Latitude must be between -90 and 90.'
-  if (!Number.isFinite(lon) || lon < -180 || lon > 180) errors.longitude = 'Longitude must be between -180 and 180.'
+  const errors: Record<string, Message> = {}
+  if (!Number.isFinite(lat) || lat < -90 || lat > 90) errors.latitude = msg('error.latitude')
+  if (!Number.isFinite(lon) || lon < -180 || lon > 180) errors.longitude = msg('error.longitude')
   if (errors.latitude && Number.isFinite(lat) && Math.abs(lat) <= 180 && Math.abs(lon) <= 90) {
-    errors.latitude += ' The values may be swapped.'
+    errors.latitude = msg('error.latitudeSwapped')
   }
   if (Object.keys(errors).length) return result(null, { errors })
   return result(`geo:${formatCoordinate(lat)},${formatCoordinate(lon)}`)

@@ -1,3 +1,4 @@
+import { useI18n } from '../i18n/context'
 import { cx } from '../lib/cx'
 import {
   useId,
@@ -171,6 +172,7 @@ export function ColorInput({
   onChange: (value: string) => void
 }) {
   const id = useId()
+  const { t } = useI18n()
   const [draft, setDraft] = useState(value)
   const [synced, setSynced] = useState(value)
   if (synced !== value) {
@@ -191,7 +193,7 @@ export function ColorInput({
           className="size-7 cursor-pointer rounded border-0 bg-transparent p-0"
         />
         <input
-          aria-label={`${label} hex value`}
+          aria-label={t('style.hexValue', { label })}
           value={draft}
           maxLength={7}
           spellCheck={false}

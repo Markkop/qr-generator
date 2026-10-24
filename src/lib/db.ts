@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie'
+import { AppError } from './errors'
 import { CONTENT_TYPES, DEFAULT_FIELDS, type ContentType, type FieldsByType } from './payload/types'
 import { buildPayload, describe } from './payload/build'
 import { sanitizeStyle, type QrStyle } from './qr/style'
@@ -169,7 +170,7 @@ function sanitizeFields<T extends ContentType>(type: T, input: unknown): FieldsB
 export async function importHistory(raw: unknown, database = db): Promise<number> {
   const data = raw as Partial<HistoryExport>
   if (!data || data.app !== 'qr-generator' || !Array.isArray(data.entries)) {
-    throw new Error('This file is not a QR Generator backup.')
+    throw new AppError('history.importNotBackup')
   }
   const logos = (Array.isArray(data.logos) ? data.logos : []).filter(
     (l): l is LogoRecord =>
