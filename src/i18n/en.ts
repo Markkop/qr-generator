@@ -261,6 +261,10 @@ export const en: Messages = {
   'quiet.spec': '{value} (spec)',
 
   'history.title': 'History',
+  'history.button': 'History ({count})',
+  'history.manage': 'Backup and options',
+  'history.itemActions': 'More actions for {label}',
+  'history.close': 'Close history',
   'history.subtitle': 'Saved in this browser only. Export a backup to move it to another device.',
   'history.export': 'Export',
   'history.import': 'Import',

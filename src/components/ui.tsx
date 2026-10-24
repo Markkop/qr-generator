@@ -1,6 +1,7 @@
 import { useI18n } from '../i18n/context'
 import { cx } from '../lib/cx'
 import {
+  forwardRef,
   useId,
   useState,
   type ButtonHTMLAttributes,
@@ -74,9 +75,12 @@ export function Field({ label, error, hint, children, className }: FieldProps) {
   )
 }
 
-export function TextInput({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
-  return <input className={cx(controlClass, 'h-10', className)} {...props} />
-}
+export const TextInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function TextInput(
+  { className, ...props },
+  ref,
+) {
+  return <input ref={ref} className={cx(controlClass, 'h-10', className)} {...props} />
+})
 
 export function TextArea({ className, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return <textarea className={cx(controlClass, 'min-h-24 py-2', className)} {...props} />

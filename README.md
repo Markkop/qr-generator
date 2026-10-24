@@ -12,7 +12,7 @@ Everything runs in the browser. There is no backend, no account and no tracking.
 - Warnings for low contrast, inverted colors, dense codes, small margins and insecure `http://` links.
 - Colors, dot and corner shapes, and a center logo. Logos are downscaled and stored locally.
 - Export to PNG, JPEG or WebP at 256 to 2048 px, or to SVG for print. Copy the image or the raw content, or use the share sheet on mobile.
-- History with search, type filter, pin, rename, delete and "open in editor". Identical codes are stored once. JSON export and import let you back it up or move it to another device.
+- History opens from a header button next to the theme control, with search, a type filter, pin, rename, delete and "open in editor". Identical codes are stored once. JSON export and import let you back it up or move it to another device.
 - Brazilian Portuguese (default) and English, switchable from the header. The choice is saved in the browser.
 - Installable PWA with dark mode, keyboard navigation and screen reader labels.
 - An empty preview illustrates the scan experience for the selected QR type on Android or iOS. It infers the initial system from passive device hints, remembers manual selection, and offers pause, replay and manual steps. No camera or permission requests; reduced-motion preferences show a static result.

@@ -262,6 +262,10 @@ export const ptBR = {
   'quiet.spec': '{value} (padrão)',
 
   'history.title': 'Histórico',
+  'history.button': 'Histórico ({count})',
+  'history.manage': 'Backup e opções',
+  'history.itemActions': 'Mais ações para {label}',
+  'history.close': 'Fechar histórico',
   'history.subtitle': 'Salvo só neste navegador. Exporte um backup para levar a outro dispositivo.',
   'history.export': 'Exportar',
   'history.import': 'Importar',

@@ -192,31 +192,38 @@ export default function App() {
             <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('app.tagline')}</p>
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
           <LanguageSelect />
-          <div
-            role="group"
-            aria-label={t('theme.label')}
-            className="flex gap-1 rounded-xl border border-zinc-200 bg-soft p-1 dark:border-zinc-700"
-          >
-            {THEMES.map(({ value, icon: Icon, label, name }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => updatePrefs({ theme: value })}
-                aria-label={t(label)}
-                aria-pressed={prefs.theme === value}
-                title={t(label)}
-                className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
-                  prefs.theme === value
-                    ? 'bg-surface text-indigo-700 shadow-sm dark:text-indigo-300'
-                    : 'text-zinc-500 hover:bg-surface hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100'
-                }`}
-              >
-                <Icon className="size-4" aria-hidden />
-                <span>{t(name)}</span>
-              </button>
-            ))}
+          <div className="flex items-center gap-2">
+            <HistoryPanel
+              saveHistory={prefs.saveHistory}
+              onSaveHistoryChange={(saveHistory) => updatePrefs({ saveHistory })}
+              onOpen={onOpen}
+            />
+            <div
+              role="group"
+              aria-label={t('theme.label')}
+              className="flex gap-1 rounded-xl border border-zinc-200 bg-soft p-1 dark:border-zinc-700"
+            >
+              {THEMES.map(({ value, icon: Icon, label, name }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => updatePrefs({ theme: value })}
+                  aria-label={t(label)}
+                  aria-pressed={prefs.theme === value}
+                  title={t(label)}
+                  className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
+                    prefs.theme === value
+                      ? 'bg-surface text-indigo-700 shadow-sm dark:text-indigo-300'
+                      : 'text-zinc-500 hover:bg-surface hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100'
+                  }`}
+                >
+                  <Icon className="size-4" aria-hidden />
+                  <span>{t(name)}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </header>
@@ -258,12 +265,6 @@ export default function App() {
             }}
           />
         </div>
-
-        <HistoryPanel
-          saveHistory={prefs.saveHistory}
-          onSaveHistoryChange={(saveHistory) => updatePrefs({ saveHistory })}
-          onOpen={onOpen}
-        />
       </main>
 
       <footer>

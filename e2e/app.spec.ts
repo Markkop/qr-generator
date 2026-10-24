@@ -10,6 +10,13 @@ async function expectScans(page: Page) {
 
 let consoleErrors: string[] = []
 
+async function openHistory(page: Page) {
+  const panel = page.getByRole('dialog', { name: 'Histórico' })
+  if (!(await panel.isVisible())) await page.getByRole('button', { name: /^Histórico/ }).click()
+  await expect(panel).toBeVisible()
+  return panel
+}
+
 test.beforeEach(async ({ page }) => {
   consoleErrors = []
   page.on('console', (message) => {
@@ -35,13 +42,32 @@ test('generates a URL code, downloads it and keeps it in history', async ({ page
   const bytes = await readFile((await download.path())!)
   expect(bytes.subarray(1, 4).toString()).toBe('PNG')
 
+  await expect(page.getByRole('dialog', { name: 'Histórico' })).toBeHidden()
+  const panel = await openHistory(page)
   const history = page.getByTestId('history-entry')
   await expect(history).toHaveCount(1)
   await expect(history.first()).toContainText('markkop.dev')
+  await expect(page.getByRole('button', { name: 'Exportar' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Baixar PNG' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Backup e opções' }).click()
+  await expect(page.getByRole('button', { name: 'Exportar' })).toBeVisible()
+  await page.getByRole('button', { name: /Mais ações para/ }).click()
+  await expect(page.getByRole('button', { name: 'Baixar PNG' })).toBeVisible()
+
+  await page.setViewportSize({ width: 320, height: 700 })
+  await expect(panel).toBeVisible()
+  const box = await panel.boundingBox()
+  expect(box).not.toBeNull()
+  expect(box!.x).toBeGreaterThanOrEqual(0)
+  expect(box!.x + box!.width).toBeLessThanOrEqual(321)
+  expect(box!.y).toBeGreaterThanOrEqual(0)
+  expect(box!.y + box!.height).toBeLessThanOrEqual(700)
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
 
   await page.reload()
+  await openHistory(page)
   await expect(page.getByTestId('history-entry')).toHaveCount(1)
-  await page.getByRole('button', { name: 'Abrir no editor' }).first().click()
+  await page.getByRole('button', { name: 'Abrir markkop.dev no editor' }).click()
   await expect(page.getByLabel('Endereço do site')).toHaveValue('markkop.dev')
   await expectScans(page)
 })
@@ -80,7 +106,11 @@ test('round-trips unicode text through the scanner', async ({ page }) => {
 })
 
 test('builds Wi-Fi codes and skips history when auto-save is off', async ({ page }) => {
+  await openHistory(page)
+  await page.getByRole('button', { name: 'Backup e opções' }).click()
   await page.getByRole('switch', { name: /Salvar códigos automaticamente/ }).click()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('dialog', { name: 'Histórico' })).toBeHidden()
   await page.getByRole('tab', { name: 'Wi-Fi' }).click()
   await page.getByLabel('Nome da rede (SSID)').fill('Cafe; Wifi')
   await page.getByLabel('Senha', { exact: true }).fill('p:w,d\\1secret')
@@ -89,6 +119,7 @@ test('builds Wi-Fi codes and skips history when auto-save is off', async ({ page
   await expect
     .poll(() => page.evaluate(() => navigator.clipboard.readText()))
     .toBe('WIFI:T:WPA;S:Cafe\\; Wifi;P:p\\:w\\,d\\\\1secret;;')
+  await openHistory(page)
   await expect(page.getByTestId('history-entry')).toHaveCount(0)
 })
 

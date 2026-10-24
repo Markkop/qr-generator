@@ -1,6 +1,20 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Check, Download, FileDown, FileUp, Pencil, Pin, PinOff, Search, SquarePen, Trash2, X } from 'lucide-react'
+import {
+  Check,
+  ChevronDown,
+  Download,
+  EllipsisVertical,
+  FileDown,
+  FileUp,
+  History,
+  Pencil,
+  Pin,
+  PinOff,
+  Search,
+  Trash2,
+  X,
+} from 'lucide-react'
 import {
   clearHistory,
   db,
@@ -17,11 +31,12 @@ import { AppError } from '../lib/errors'
 import { CONTENT_TYPES, typeLabelKey, type ContentType } from '../lib/payload/types'
 import { renderQr } from '../lib/qr/render'
 import { downloadBlob } from '../lib/export'
-import { Button, Card, Select, Switch, TextInput } from './ui'
+import { historyPopoverBox } from '../lib/history-popover'
+import { Button, Select, Switch, TextInput } from './ui'
 import { cx } from '../lib/cx'
 import { useToast } from './toast-context'
 
-const PAGE_SIZE = 24
+const PAGE_SIZE = 8
 
 function Thumbnail({ entry }: { entry: HistoryEntry }) {
   const [url, setUrl] = useState<string | null>(null)
@@ -45,17 +60,28 @@ function Thumbnail({ entry }: { entry: HistoryEntry }) {
     return () => {
       cancelled = true
       if (objectUrl) URL.revokeObjectURL(objectUrl)
+      setUrl(null)
     }
   }, [key])
 
   return (
-    <div className="size-16 shrink-0 overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700">
+    <div className="size-12 shrink-0 overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-700">
       {url && <img src={url} alt="" className="size-full" />}
     </div>
   )
 }
 
-function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: HistoryEntry) => void }) {
+function EntryRow({
+  entry,
+  menuOpen,
+  onToggleMenu,
+  onOpen,
+}: {
+  entry: HistoryEntry
+  menuOpen: boolean
+  onToggleMenu: () => void
+  onOpen: (entry: HistoryEntry) => void
+}) {
   const { t, formatDate } = useI18n()
   const toast = useToast()
   const [editing, setEditing] = useState(false)
@@ -78,112 +104,101 @@ function EntryRow({ entry, onOpen }: { entry: HistoryEntry; onOpen: (entry: Hist
   }
 
   return (
-    <li
-      className="flex items-center gap-3 rounded-xl border border-zinc-200 p-2.5 dark:border-zinc-800"
-      data-testid="history-entry"
-    >
-      <button
-        type="button"
-        onClick={() => onOpen(entry)}
-        className="rounded-lg focus-visible:outline-2 focus-visible:outline-indigo-500"
-        aria-label={t('history.open', { label })}
-      >
-        <Thumbnail entry={entry} />
-      </button>
-      <div className="min-w-0 flex-1">
-        {editing ? (
-          <form
-            className="flex items-center gap-1"
-            onSubmit={(e) => {
-              e.preventDefault()
-              void commitRename()
+    <li className="rounded-xl border border-zinc-200 p-1.5 dark:border-zinc-800" data-testid="history-entry">
+      {editing ? (
+        <form
+          className="flex items-center gap-1"
+          onSubmit={(e) => {
+            e.preventDefault()
+            void commitRename()
+          }}
+        >
+          <TextInput
+            aria-label={t('history.name')}
+            value={draft}
+            maxLength={200}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.stopPropagation()
+                setDraft(entry.label)
+                setEditing(false)
+              }
+            }}
+            className="h-8"
+            autoFocus
+          />
+          <Button type="submit" size="sm" variant="ghost" aria-label={t('history.saveName')}>
+            <Check className="size-4" aria-hidden />
+          </Button>
+        </form>
+      ) : (
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onOpen(entry)}
+            aria-label={t('history.open', { label })}
+            title={label}
+            className="flex min-w-0 flex-1 items-center gap-2 rounded-lg p-1 text-left focus-visible:outline-2 focus-visible:outline-indigo-500"
+          >
+            <Thumbnail entry={entry} />
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-1 text-sm font-medium">
+                {entry.pinned === 1 && <Pin className="size-3 shrink-0 text-indigo-500" aria-hidden />}
+                <span className="truncate">{label}</span>
+              </span>
+              <span className="block truncate text-xs text-zinc-500 dark:text-zinc-400">
+                {t(typeLabelKey(entry.type))} · {formatDate(entry.updatedAt)}
+              </span>
+            </span>
+          </button>
+          <Button
+            size="sm"
+            variant="ghost"
+            aria-expanded={menuOpen}
+            aria-label={t('history.itemActions', { label })}
+            onClick={onToggleMenu}
+            className="shrink-0"
+          >
+            <EllipsisVertical className="size-4" aria-hidden />
+          </Button>
+        </div>
+      )}
+      {menuOpen && !editing && (
+        <div className="mt-1.5 flex flex-wrap gap-1 border-t border-zinc-100 px-1 pt-1.5 dark:border-zinc-800">
+          <Button size="sm" variant="ghost" onClick={download}>
+            <Download className="size-3.5" aria-hidden />
+            {t('history.downloadPng')}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              onToggleMenu()
+              setDraft(entry.label)
+              setEditing(true)
             }}
           >
-            <TextInput
-              aria-label={t('history.name')}
-              value={draft}
-              maxLength={200}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') {
-                  setDraft(entry.label)
-                  setEditing(false)
-                }
-              }}
-              className="h-8"
-              autoFocus
-            />
-            <Button type="submit" size="sm" variant="ghost" aria-label={t('history.saveName')}>
-              <Check className="size-4" aria-hidden />
-            </Button>
-          </form>
-        ) : (
-          <p className="truncate text-sm font-medium" title={label}>
-            {entry.pinned === 1 && (
-              <Pin className="mr-1 inline size-3 text-indigo-500" aria-label={t('history.pinned')} />
-            )}
-            {label}
-          </p>
-        )}
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
-          {t(typeLabelKey(entry.type))} · {formatDate(entry.updatedAt)}
-        </p>
-      </div>
-      <div className="flex shrink-0 items-center">
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => onOpen(entry)}
-          aria-label={t('history.openShort')}
-          title={t('history.openShort')}
-        >
-          <SquarePen className="size-4" aria-hidden />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={download}
-          aria-label={t('history.downloadPng')}
-          title={t('history.downloadPng')}
-          className="max-sm:hidden"
-        >
-          <Download className="size-4" aria-hidden />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => {
-            setDraft(entry.label)
-            setEditing(true)
-          }}
-          aria-label={t('history.rename')}
-          title={t('history.rename')}
-          className="max-sm:hidden"
-        >
-          <Pencil className="size-4" aria-hidden />
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={() => setPinned(entry.id, entry.pinned === 0)}
-          aria-label={t(entry.pinned ? 'history.unpin' : 'history.pin')}
-          title={t(entry.pinned ? 'history.unpin' : 'history.pin')}
-        >
-          {entry.pinned ? <PinOff className="size-4" aria-hidden /> : <Pin className="size-4" aria-hidden />}
-        </Button>
-        <Button
-          size="sm"
-          variant="danger"
-          onClick={async () => {
-            await deleteEntry(entry.id)
-            toast(t('history.deleted'))
-          }}
-          aria-label={t('history.delete')}
-          title={t('history.delete')}
-        >
-          <Trash2 className="size-4" aria-hidden />
-        </Button>
-      </div>
+            <Pencil className="size-3.5" aria-hidden />
+            {t('history.rename')}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => setPinned(entry.id, entry.pinned === 0)}>
+            {entry.pinned ? <PinOff className="size-3.5" aria-hidden /> : <Pin className="size-3.5" aria-hidden />}
+            {t(entry.pinned ? 'history.unpin' : 'history.pin')}
+          </Button>
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={async () => {
+              await deleteEntry(entry.id)
+              toast(t('history.deleted'))
+            }}
+          >
+            <Trash2 className="size-3.5" aria-hidden />
+            {t('history.delete')}
+          </Button>
+        </div>
+      )}
     </li>
   )
 }
@@ -198,10 +213,106 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
   const { t, tn } = useI18n()
   const toast = useToast()
   const importInput = useRef<HTMLInputElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const manageRef = useRef<HTMLButtonElement>(null)
+  const panelId = `history-${useId().replace(/:/g, '')}`
+  const titleId = `${panelId}-title`
+  const manageId = `${panelId}-manage`
+  const [open, setOpen] = useState(false)
+  const [manageOpen, setManageOpen] = useState(false)
+  const [menuId, setMenuId] = useState<string | null>(null)
+  const [box, setBox] = useState({ top: 0, left: 0, width: 320, maxHeight: 480 })
   const [query, setQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<ContentType | 'all'>('all')
   const [limit, setLimit] = useState(PAGE_SIZE)
   const entries = useLiveQuery(() => db.entries.orderBy('updatedAt').reverse().toArray(), [])
+
+  const place = () => {
+    const anchor = buttonRef.current
+    if (!anchor) return
+    setBox(
+      historyPopoverBox(anchor.getBoundingClientRect(), {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      }),
+    )
+  }
+
+  const close = (restoreFocus = false) => {
+    setOpen(false)
+    setManageOpen(false)
+    setMenuId(null)
+    if (restoreFocus) buttonRef.current?.focus()
+  }
+
+  const toggle = () => {
+    if (open) {
+      close()
+      return
+    }
+    place()
+    setOpen(true)
+  }
+
+  useLayoutEffect(() => {
+    if (!open) return
+    const update = () => {
+      const anchor = buttonRef.current
+      if (!anchor) return
+      setBox(
+        historyPopoverBox(anchor.getBoundingClientRect(), {
+          width: window.innerWidth,
+          height: window.innerHeight,
+        }),
+      )
+    }
+    update()
+    window.addEventListener('resize', update)
+    window.addEventListener('scroll', update)
+    return () => {
+      window.removeEventListener('resize', update)
+      window.removeEventListener('scroll', update)
+    }
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const frame = requestAnimationFrame(() => {
+      const target = searchRef.current ?? manageRef.current
+      target?.focus({ preventScroll: true })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (panelRef.current?.contains(target) || buttonRef.current?.contains(target)) return
+      setOpen(false)
+      setManageOpen(false)
+      setMenuId(null)
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (menuId) {
+        setMenuId(null)
+        return
+      }
+      setOpen(false)
+      setManageOpen(false)
+      buttonRef.current?.focus()
+    }
+    document.addEventListener('pointerdown', onPointer)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointer)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open, menuId])
 
   const filtered = useMemo(() => {
     if (!entries) return []
@@ -247,108 +358,203 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
     toast(t('history.cleared'))
   }
 
+  const openEntry = (entry: HistoryEntry) => {
+    close()
+    onOpen(entry)
+  }
+
   const total = entries?.length ?? 0
 
   return (
-    <Card className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h2 className="text-base font-semibold">{t('history.title')}</h2>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('history.subtitle')}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-1">
-          <Button size="sm" variant="ghost" onClick={onExport} disabled={!total}>
-            <FileDown className="size-4" aria-hidden />
-            {t('history.export')}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => importInput.current?.click()}>
-            <FileUp className="size-4" aria-hidden />
-            {t('history.import')}
-          </Button>
-          <input
-            ref={importInput}
-            type="file"
-            accept="application/json,.json"
-            className="sr-only"
-            tabIndex={-1}
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={toggle}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={panelId}
+        aria-label={entries ? t('history.button', { count: total }) : t('history.title')}
+        className={cx(
+          'relative inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border px-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 max-sm:w-10 max-sm:px-0',
+          open
+            ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-950 dark:text-indigo-300'
+            : 'border-zinc-200 bg-soft text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800',
+        )}
+      >
+        <History className="size-4 shrink-0" aria-hidden />
+        <span className="max-sm:sr-only">{t('history.title')}</span>
+        {entries && (
+          <span
             aria-hidden
-            onChange={(e) => onImport(e.target.files?.[0])}
-          />
-          <Button size="sm" variant="danger" onClick={onClear} disabled={!total}>
-            <Trash2 className="size-4" aria-hidden />
-            {t('history.clear')}
-          </Button>
-        </div>
-      </div>
+            className={cx(
+              'inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] leading-none font-semibold tabular-nums max-sm:absolute max-sm:-top-1 max-sm:-right-1',
+              total > 0
+                ? 'bg-indigo-600 text-white'
+                : 'bg-zinc-900/10 text-zinc-600 dark:bg-white/15 dark:text-zinc-300',
+            )}
+          >
+            {total > 99 ? '99+' : total}
+          </span>
+        )}
+      </button>
 
-      <Switch
-        checked={saveHistory}
-        onChange={onSaveHistoryChange}
-        label={t('history.autoSave')}
-        description={t('history.autoSaveHint')}
-      />
-
-      {total > 0 && (
-        <div className="grid grid-cols-[1fr_auto] gap-2">
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400"
-              aria-hidden
-            />
-            <TextInput
-              aria-label={t('history.search')}
-              placeholder={t('history.searchPlaceholder')}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-9"
-            />
-            {query && (
-              <button
-                type="button"
-                onClick={() => setQuery('')}
-                aria-label={t('history.clearSearch')}
-                className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-zinc-400 hover:text-zinc-700"
+      {open && (
+        <div
+          ref={panelRef}
+          id={panelId}
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby={titleId}
+          tabIndex={-1}
+          style={{ top: box.top, left: box.left, width: box.width, maxHeight: box.maxHeight }}
+          className="fixed z-40 m-0 overflow-auto overscroll-contain rounded-2xl border border-zinc-200 bg-surface text-zinc-900 shadow-xl focus:outline-none dark:border-zinc-700 dark:text-zinc-100"
+        >
+          <div className="sticky top-0 z-10 flex flex-col gap-2.5 border-b border-zinc-200 bg-surface px-3 py-3 dark:border-zinc-800">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 id={titleId} className="text-sm font-semibold">
+                    {t('history.title')}
+                  </h2>
+                  {entries && <span className="text-xs font-medium text-zinc-500 tabular-nums">{total}</span>}
+                </div>
+                <p className="mt-0.5 line-clamp-2 text-xs text-zinc-500 dark:text-zinc-400">{t('history.subtitle')}</p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                aria-label={t('history.close')}
+                onClick={() => close(true)}
+                className="shrink-0"
               >
                 <X className="size-4" aria-hidden />
-              </button>
+              </Button>
+            </div>
+
+            <button
+              ref={manageRef}
+              type="button"
+              aria-expanded={manageOpen}
+              aria-controls={manageId}
+              onClick={() => setManageOpen((value) => !value)}
+              className="flex w-full items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            >
+              <span>{t('history.manage')}</span>
+              <ChevronDown
+                className={cx(
+                  'size-4 shrink-0 text-zinc-400 transition-transform motion-reduce:transition-none',
+                  manageOpen && 'rotate-180',
+                )}
+                aria-hidden
+              />
+            </button>
+            {manageOpen && (
+              <div id={manageId} className="flex flex-col gap-3">
+                <div className="flex flex-wrap gap-1">
+                  <Button size="sm" variant="ghost" onClick={onExport} disabled={!total}>
+                    <FileDown className="size-4" aria-hidden />
+                    {t('history.export')}
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => importInput.current?.click()}>
+                    <FileUp className="size-4" aria-hidden />
+                    {t('history.import')}
+                  </Button>
+                  <Button size="sm" variant="danger" onClick={onClear} disabled={!total}>
+                    <Trash2 className="size-4" aria-hidden />
+                    {t('history.clear')}
+                  </Button>
+                </div>
+                <Switch
+                  checked={saveHistory}
+                  onChange={onSaveHistoryChange}
+                  label={t('history.autoSave')}
+                  description={t('history.autoSaveHint')}
+                />
+              </div>
+            )}
+
+            {total > 0 && (
+              <div className="flex flex-col gap-2">
+                <div className="relative">
+                  <Search
+                    className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-zinc-400"
+                    aria-hidden
+                  />
+                  <TextInput
+                    ref={searchRef}
+                    aria-label={t('history.search')}
+                    placeholder={t('history.searchPlaceholder')}
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="pl-9"
+                  />
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={() => setQuery('')}
+                      aria-label={t('history.clearSearch')}
+                      className="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-zinc-400 hover:text-zinc-700"
+                    >
+                      <X className="size-4" aria-hidden />
+                    </button>
+                  )}
+                </div>
+                <Select
+                  aria-label={t('history.filter')}
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value as ContentType | 'all')}
+                >
+                  <option value="all">{t('history.allTypes')}</option>
+                  {CONTENT_TYPES.map((type) => (
+                    <option key={type} value={type}>
+                      {t(typeLabelKey(type))}
+                    </option>
+                  ))}
+                </Select>
+              </div>
             )}
           </div>
-          <Select
-            aria-label={t('history.filter')}
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as ContentType | 'all')}
-            className="w-36"
-          >
-            <option value="all">{t('history.allTypes')}</option>
-            {CONTENT_TYPES.map((type) => (
-              <option key={type} value={type}>
-                {t(typeLabelKey(type))}
-              </option>
-            ))}
-          </Select>
+
+          <div className="flex flex-col gap-2 px-3 py-3">
+            <input
+              ref={importInput}
+              type="file"
+              accept="application/json,.json"
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden
+              onChange={(e) => onImport(e.target.files?.[0])}
+            />
+            {entries === undefined ? null : total === 0 ? (
+              <p className="rounded-xl border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                {t('history.empty')}
+              </p>
+            ) : filtered.length === 0 ? (
+              <p className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">{t('history.noMatch')}</p>
+            ) : (
+              <>
+                <ul className="flex flex-col gap-2">
+                  {filtered.slice(0, limit).map((entry) => (
+                    <EntryRow
+                      key={entry.id}
+                      entry={entry}
+                      menuOpen={menuId === entry.id}
+                      onToggleMenu={() => setMenuId((current) => (current === entry.id ? null : entry.id))}
+                      onOpen={openEntry}
+                    />
+                  ))}
+                </ul>
+                {filtered.length > limit && (
+                  <Button variant="ghost" className="self-center" onClick={() => setLimit((l) => l + PAGE_SIZE)}>
+                    {t('history.showMore', { count: filtered.length - limit })}
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
-
-      {entries === undefined ? null : total === 0 ? (
-        <p className="rounded-xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-          {t('history.empty')}
-        </p>
-      ) : filtered.length === 0 ? (
-        <p className="p-4 text-center text-sm text-zinc-500 dark:text-zinc-400">{t('history.noMatch')}</p>
-      ) : (
-        <>
-          <ul className={cx('grid grid-cols-1 gap-2 lg:grid-cols-2')}>
-            {filtered.slice(0, limit).map((entry) => (
-              <EntryRow key={entry.id} entry={entry} onOpen={onOpen} />
-            ))}
-          </ul>
-          {filtered.length > limit && (
-            <Button variant="ghost" className="self-center" onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-              {t('history.showMore', { count: filtered.length - limit })}
-            </Button>
-          )}
-        </>
-      )}
-    </Card>
+    </>
   )
 }
