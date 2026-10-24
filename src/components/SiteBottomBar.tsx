@@ -1,7 +1,5 @@
 import { useI18n } from '../i18n/context'
 
-const CNPJ = '48.225.665/0001-20'
-
 export function SiteBottomBar() {
   const { t } = useI18n()
   return (
@@ -28,11 +26,7 @@ export function SiteBottomBar() {
           {t('footer.by')} <strong className="font-extrabold text-indigo-600 dark:text-indigo-400">Mark Kop</strong>
         </span>
       </a>
-      <span className="inline-flex flex-wrap items-center justify-center gap-x-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
-        <span>CNPJ {CNPJ}</span>
-        <span aria-hidden="true">&middot;</span>
-        <span>© 2026</span>
-      </span>
+      <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">© 2026</span>
       <nav aria-label={t('footer.navigation')} className="flex flex-wrap items-center justify-center gap-x-4">
         <a
           href="https://github.com/Markkop/qr-generator"
