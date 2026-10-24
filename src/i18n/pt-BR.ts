@@ -4,10 +4,11 @@ export const ptBR = {
   'app.documentTitle': 'Gerador de QR Code: grátis para links, Wi-Fi e contatos',
   'app.skip': 'Pular para o conteúdo',
 
-  'theme.system': 'Tema: sistema',
+  'theme.label': 'Tema',
+  'theme.lightName': 'Claro',
+  'theme.darkName': 'Escuro',
   'theme.light': 'Tema: claro',
   'theme.dark': 'Tema: escuro',
-  'theme.switch': '{current}. Trocar tema.',
   'language.label': 'Idioma',
 
   'tabs.label': 'Tipo de conteúdo',

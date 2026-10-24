@@ -3,7 +3,7 @@ import { useI18n } from '../i18n/context'
 export function SiteBottomBar() {
   const { t } = useI18n()
   return (
-    <div className="flex w-full flex-wrap items-center justify-center gap-x-6 border-t border-zinc-200 bg-zinc-100 px-[max(1rem,env(safe-area-inset-left,0px))] pt-1 pb-[calc(0.25rem+env(safe-area-inset-bottom,0px))] text-center font-[ui-rounded,system-ui,sans-serif] text-sm leading-5 font-semibold text-zinc-800 antialiased dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100">
+    <div className="flex w-full flex-wrap items-center justify-center gap-x-6 border-t border-zinc-200 bg-soft px-[max(1rem,env(safe-area-inset-left,0px))] pt-1 pb-[calc(0.25rem+env(safe-area-inset-bottom,0px))] text-center font-[ui-rounded,system-ui,sans-serif] text-sm leading-5 font-semibold text-zinc-800 antialiased dark:border-zinc-800 dark:text-zinc-100">
       <a
         href="https://markkop.dev"
         target="_blank"

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
-import { Monitor, Moon, QrCode, Sun } from 'lucide-react'
+import { Moon, QrCode, Sun } from 'lucide-react'
 import { ContentForm } from './components/ContentForm'
 import { HistoryPanel } from './components/HistoryPanel'
 import { PreviewPanel, type Notice } from './components/PreviewPanel'
@@ -9,7 +9,7 @@ import { TypeTabs } from './components/TypeTabs'
 import { PANEL_ID, tabId } from './components/tabs'
 import { LanguageSelect } from './components/LanguageSelect'
 import { SiteBottomBar } from './components/SiteBottomBar'
-import { Button, Card } from './components/ui'
+import { Card } from './components/ui'
 import { useQrPreview } from './hooks/useQrPreview'
 import { useI18n } from './i18n/context'
 import type { Message, MessageKey } from './i18n/messages'
@@ -23,11 +23,10 @@ import { renderQr } from './lib/qr/render'
 import { DEFAULT_STYLE, resolveErrorCorrection, sanitizeStyle, type QrStyle } from './lib/qr/style'
 import { useApplyTheme, usePreferences, type Theme } from './lib/prefs'
 
-const THEME_CYCLE: Record<Theme, { next: Theme; icon: typeof Sun; label: MessageKey }> = {
-  system: { next: 'light', icon: Monitor, label: 'theme.system' },
-  light: { next: 'dark', icon: Sun, label: 'theme.light' },
-  dark: { next: 'system', icon: Moon, label: 'theme.dark' },
-}
+const THEMES: { value: Theme; icon: typeof Sun; label: MessageKey; name: MessageKey }[] = [
+  { value: 'light', icon: Sun, label: 'theme.light', name: 'theme.lightName' },
+  { value: 'dark', icon: Moon, label: 'theme.dark', name: 'theme.darkName' },
+]
 
 interface NoticeMessage {
   level: Notice['level']
@@ -175,18 +174,15 @@ export default function App() {
     toast(t('toast.loaded'))
   }
 
-  const theme = THEME_CYCLE[prefs.theme]
-  const ThemeIcon = theme.icon
-
   return (
-    <div className="flex min-h-dvh flex-col bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <div className="flex min-h-dvh flex-col bg-page text-zinc-900 dark:text-zinc-100">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:shadow"
       >
         {t('app.skip')}
       </a>
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+      <header className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4 sm:px-6">
         <div className="flex items-center gap-2.5">
           <span className="flex size-9 items-center justify-center rounded-xl bg-indigo-600 text-white">
             <QrCode className="size-5" aria-hidden />
@@ -196,17 +192,32 @@ export default function App() {
             <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('app.tagline')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-2">
           <LanguageSelect />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => updatePrefs({ theme: theme.next })}
-            aria-label={t('theme.switch', { current: t(theme.label) })}
-            title={t(theme.label)}
+          <div
+            role="group"
+            aria-label={t('theme.label')}
+            className="flex gap-1 rounded-xl border border-zinc-200 bg-soft p-1 dark:border-zinc-700"
           >
-            <ThemeIcon className="size-4" aria-hidden />
-          </Button>
+            {THEMES.map(({ value, icon: Icon, label, name }) => (
+              <button
+                key={value}
+                type="button"
+                onClick={() => updatePrefs({ theme: value })}
+                aria-label={t(label)}
+                aria-pressed={prefs.theme === value}
+                title={t(label)}
+                className={`inline-flex h-8 items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 ${
+                  prefs.theme === value
+                    ? 'bg-surface text-indigo-700 shadow-sm dark:text-indigo-300'
+                    : 'text-zinc-500 hover:bg-surface hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-100'
+                }`}
+              >
+                <Icon className="size-4" aria-hidden />
+                <span>{t(name)}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 

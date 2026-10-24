@@ -6,10 +6,11 @@ export const en: Messages = {
   'app.documentTitle': 'QR Generator: free QR codes for links, Wi-Fi and contacts',
   'app.skip': 'Skip to content',
 
-  'theme.system': 'Theme: system',
+  'theme.label': 'Color theme',
+  'theme.lightName': 'Light',
+  'theme.darkName': 'Dark',
   'theme.light': 'Theme: light',
   'theme.dark': 'Theme: dark',
-  'theme.switch': '{current}. Switch theme.',
   'language.label': 'Language',
 
   'tabs.label': 'Content type',

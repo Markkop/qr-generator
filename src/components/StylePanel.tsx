@@ -85,7 +85,7 @@ export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }
   }
 
   return (
-    <details className="group rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900/60">
+    <details className="group rounded-2xl border border-zinc-200 bg-surface shadow-sm dark:border-zinc-800">
       <summary className="flex cursor-pointer list-none items-center justify-between rounded-2xl p-4 select-none sm:px-5 [&::-webkit-details-marker]:hidden">
         <span>
           <span className="block text-base font-semibold">{t('style.title')}</span>

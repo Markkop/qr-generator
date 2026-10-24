@@ -15,7 +15,7 @@ type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
 const buttonVariants: Record<ButtonVariant, string> = {
   primary: 'bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-indigo-600/50',
   secondary:
-    'border border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800',
+    'border border-zinc-300 bg-surface text-zinc-900 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800',
   ghost: 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800',
   danger: 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50',
 }
@@ -41,7 +41,7 @@ export function Button({
 }
 
 const controlClass =
-  'w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 aria-invalid:border-red-500'
+  'w-full rounded-lg border border-zinc-300 bg-field px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 aria-invalid:border-red-500'
 
 interface FieldProps {
   label: string
@@ -184,7 +184,7 @@ export function ColorInput({
       <label htmlFor={id} className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
         {label}
       </label>
-      <div className="flex h-10 items-center gap-2 rounded-lg border border-zinc-300 bg-white px-2 dark:border-zinc-700 dark:bg-zinc-900">
+      <div className="flex h-10 items-center gap-2 rounded-lg border border-zinc-300 bg-field px-2 dark:border-zinc-700 dark:bg-zinc-900">
         <input
           id={id}
           type="color"
@@ -214,7 +214,7 @@ export function Card({ className, children }: { className?: string; children: Re
   return (
     <section
       className={cx(
-        'rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm sm:p-5 dark:border-zinc-800 dark:bg-zinc-900/60',
+        'rounded-2xl border border-zinc-200 bg-surface p-4 shadow-sm sm:p-5 dark:border-zinc-800',
         className,
       )}
     >

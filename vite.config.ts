@@ -26,8 +26,8 @@ export default defineConfig({
         short_name: 'QR',
         description: 'Crie QR codes para links, Wi-Fi, contatos e mais. Privado, grátis e offline.',
         lang: 'pt-BR',
-        theme_color: '#4f46e5',
-        background_color: '#ffffff',
+        theme_color: '#f7f4ef',
+        background_color: '#f7f4ef',
         display: 'standalone',
         start_url: '/',
         icons: [

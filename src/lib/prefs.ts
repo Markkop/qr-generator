@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { ExportFormat } from './qr/render'
 
-export type Theme = 'system' | 'light' | 'dark'
+export type Theme = 'light' | 'dark'
 
 export interface Preferences {
   theme: Theme
@@ -11,7 +11,7 @@ export interface Preferences {
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
-  theme: 'system',
+  theme: 'light',
   saveHistory: true,
   exportFormat: 'png',
   exportSize: 1024,
@@ -22,7 +22,7 @@ const KEY = 'qr-generator:prefs'
 function read(): Preferences {
   try {
     const stored = JSON.parse(localStorage.getItem(KEY) ?? '{}') as Partial<Preferences>
-    return { ...DEFAULT_PREFERENCES, ...stored }
+    return { ...DEFAULT_PREFERENCES, ...stored, theme: stored.theme === 'dark' ? 'dark' : 'light' }
   } catch {
     return DEFAULT_PREFERENCES
   }
@@ -45,14 +45,8 @@ export function usePreferences() {
 
 export function useApplyTheme(theme: Theme) {
   useEffect(() => {
-    const media = window.matchMedia('(prefers-color-scheme: dark)')
-    const apply = () => {
-      const dark = theme === 'dark' || (theme === 'system' && media.matches)
-      document.documentElement.classList.toggle('dark', dark)
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#09090b' : '#ffffff')
-    }
-    apply()
-    media.addEventListener('change', apply)
-    return () => media.removeEventListener('change', apply)
+    const dark = theme === 'dark'
+    document.documentElement.classList.toggle('dark', dark)
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', dark ? '#09090b' : '#f7f4ef')
   }, [theme])
 }
