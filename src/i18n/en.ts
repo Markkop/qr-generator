@@ -341,6 +341,8 @@ export const en: Messages = {
   'pix.amountHint': 'Leave empty to let the payer enter the amount.',
   'pix.nameHint': 'Required in the QR code. Your bank displays the name registered to the Pix key.',
   'pix.cityHint': 'Required in the QR code, but your banking app may not display it.',
+  'pix.txidHint':
+    'Optional: links the payment to an order, such as ORDER123. Up to 25 letters and numbers, without spaces.',
   'pix.namePlaceholder': 'Ana Silva',
   'pix.placeholder.email': 'ana@example.com',
   'pix.placeholder.phone': '+55 11 91234 5678',

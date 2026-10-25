@@ -400,7 +400,7 @@ function PixForm({ fields, errors, onChange }: FormProps<'pix'>) {
     name: t('pix.nameHint'),
     city: t('pix.cityHint'),
     amount: t('pix.amountHint'),
-    txid: undefined,
+    txid: t('pix.txidHint'),
   }
   const text = (
     key: 'key' | 'name' | 'city' | 'amount' | 'txid',
