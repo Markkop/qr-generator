@@ -36,7 +36,7 @@ export function Button({
       type="button"
       className={cx(
         'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-60',
-        size === 'md' ? 'h-10 px-4 text-sm' : 'h-8 px-2.5 text-xs',
+        size === 'md' ? 'min-h-11 px-4 py-2 text-sm' : 'min-h-11 px-2.5 py-2 text-xs sm:min-h-8 sm:py-1',
         buttonVariants[variant],
         className,
       )}
@@ -46,7 +46,7 @@ export function Button({
 }
 
 const controlClass =
-  'w-full rounded-lg border border-zinc-300 bg-field px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 aria-invalid:border-red-500'
+  'min-w-0 w-full rounded-lg border border-zinc-300 bg-field px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 aria-invalid:border-red-500'
 
 interface FieldProps {
   label: string
@@ -83,7 +83,7 @@ export const TextInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLIn
   { className, ...props },
   ref,
 ) {
-  return <input ref={ref} className={cx(controlClass, 'h-10', className)} {...props} />
+  return <input ref={ref} className={cx(controlClass, 'h-11', className)} {...props} />
 })
 
 export const TextArea = forwardRef<HTMLTextAreaElement, TextareaHTMLAttributes<HTMLTextAreaElement>>(function TextArea(
@@ -100,7 +100,7 @@ function writeControlValue(element: HTMLInputElement | HTMLTextAreaElement, valu
 }
 
 const fieldActionClass =
-  'inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-zinc-300 bg-surface px-2.5 text-sm font-medium whitespace-nowrap text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
+  'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-zinc-300 bg-surface px-2.5 text-sm font-medium whitespace-nowrap text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
 
 function PasteButton({
   control,
@@ -200,7 +200,7 @@ export function PasteArea({
 }
 
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
-  return <select className={cx(controlClass, 'h-10 pr-8', className)} {...props} />
+  return <select className={cx(controlClass, 'h-11 pr-8', className)} {...props} />
 }
 
 export function Switch({
@@ -265,7 +265,7 @@ export function Segmented<T extends string>({
             aria-pressed={value === option.value}
             onClick={() => onChange(option.value)}
             className={cx(
-              'h-8 rounded-md border px-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500',
+              'min-h-11 rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:min-h-8 sm:py-1',
               value === option.value
                 ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-950 dark:text-indigo-300'
                 : 'border-zinc-300 text-zinc-700 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800',
@@ -301,7 +301,7 @@ export function ColorInput({
       <label htmlFor={id} className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
         {label}
       </label>
-      <div className="flex h-10 items-center gap-2 rounded-lg border border-zinc-300 bg-field px-2 dark:border-zinc-700 dark:bg-zinc-900">
+      <div className="flex h-11 items-center gap-2 rounded-lg border border-zinc-300 bg-field px-2 dark:border-zinc-700 dark:bg-zinc-900">
         <input
           id={id}
           type="color"

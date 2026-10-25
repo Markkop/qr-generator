@@ -80,7 +80,8 @@ export function PreviewPanel(props: Props) {
   const ready = props.actionsReady
 
   return (
-    <Card className="flex flex-col gap-4">
+    <Card className="flex min-w-0 flex-col gap-4">
+      <h2 className="text-base font-semibold tracking-tight">{t('preview.title')}</h2>
       {state.status === 'empty' ? (
         <DevicePreview type={type} />
       ) : (
@@ -127,7 +128,7 @@ export function PreviewPanel(props: Props) {
       )}
 
       <div className="flex flex-col gap-3">
-        <div className="grid grid-cols-[1fr_auto] gap-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
           <Select
             aria-label={t('export.format')}
             value={prefs.exportFormat}
@@ -157,7 +158,7 @@ export function PreviewPanel(props: Props) {
           <Download className="size-4" aria-hidden />
           {t('action.download')}
         </Button>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 [&_button]:px-3 [&_svg]:shrink-0">
           {props.canCopyImage && (
             <Button disabled={!ready} onClick={props.onCopyImage}>
               <ImageIcon className="size-4" aria-hidden />

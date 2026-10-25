@@ -1,4 +1,4 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef, useSyncExternalStore, type KeyboardEvent } from 'react'
 import {
   AtSign,
   CalendarDays,
@@ -34,17 +34,31 @@ const ICONS: Record<ContentType, LucideIcon> = {
   telegram: Send,
 }
 
+const VERTICAL_LAYOUT = '(min-width: 640px)'
+
+function subscribeLayout(onChange: () => void) {
+  const query = window.matchMedia(VERTICAL_LAYOUT)
+  query.addEventListener('change', onChange)
+  return () => query.removeEventListener('change', onChange)
+}
+
+function isVerticalLayout() {
+  return window.matchMedia(VERTICAL_LAYOUT).matches
+}
+
 export function TypeTabs({ value, onChange }: { value: ContentType; onChange: (type: ContentType) => void }) {
   const { t } = useI18n()
   const refs = useRef<Partial<Record<ContentType, HTMLButtonElement | null>>>({})
+  const vertical = useSyncExternalStore(subscribeLayout, isVerticalLayout, () => false)
 
   const onKeyDown = (event: KeyboardEvent) => {
     const index = CONTENT_TYPES.indexOf(value)
+    const columns = vertical ? 1 : 4
     const moves: Record<string, number> = {
       ArrowRight: index + 1,
-      ArrowDown: index + 1,
+      ArrowDown: index + columns,
       ArrowLeft: index - 1,
-      ArrowUp: index - 1,
+      ArrowUp: index - columns,
       Home: 0,
       End: CONTENT_TYPES.length - 1,
     }
@@ -56,7 +70,13 @@ export function TypeTabs({ value, onChange }: { value: ContentType; onChange: (t
   }
 
   return (
-    <div role="tablist" aria-label={t('tabs.label')} className="grid grid-cols-4 gap-1.5" onKeyDown={onKeyDown}>
+    <div
+      role="tablist"
+      aria-label={t('tabs.label')}
+      aria-orientation={vertical ? 'vertical' : 'horizontal'}
+      className="type-tabs"
+      onKeyDown={onKeyDown}
+    >
       {CONTENT_TYPES.map((type) => {
         const Icon = ICONS[type]
         const selected = type === value
@@ -74,14 +94,14 @@ export function TypeTabs({ value, onChange }: { value: ContentType; onChange: (t
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(type)}
             className={cx(
-              'flex flex-col items-center gap-1 rounded-xl border px-1 py-2.5 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500',
+              'type-tab focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500',
               selected
-                ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-400 dark:bg-indigo-950/60 dark:text-indigo-300'
-                : 'border-zinc-200 text-zinc-600 hover:bg-zinc-50 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800/60',
+                ? 'bg-indigo-600 text-white shadow-sm dark:bg-indigo-500'
+                : 'text-zinc-600 hover:bg-soft hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100',
             )}
           >
-            <Icon className="size-5" aria-hidden />
-            {t(typeLabelKey(type))}
+            <Icon className="size-4 shrink-0" aria-hidden />
+            <span>{t(typeLabelKey(type))}</span>
           </button>
         )
       })}

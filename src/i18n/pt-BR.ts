@@ -19,6 +19,8 @@ export const ptBR = {
   'field.clearFrom': 'Limpar {label}',
 
   'tabs.label': 'Tipo de conteúdo',
+  'editor.content': 'Seu conteúdo',
+  'preview.title': 'Prévia e download',
   'type.url': 'URL',
   'type.text': 'Texto',
   'type.wifi': 'Wi-Fi',

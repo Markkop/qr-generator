@@ -22,6 +22,15 @@ const DEBOUNCE_MS = 150
 
 export function useQrPreview(input: RenderInput | null): PreviewState {
   const [state, setState] = useState<PreviewState>({ status: 'empty' })
+  const previewUrl = state.status === 'ready' ? state.url : null
+
+  useEffect(() => {
+    // Keep the URL valid while this preview can still be displayed between edits.
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
+
   // Serialized so the effect re-runs only when the content changes, not on every new object.
   const key = input ? JSON.stringify(input) : null
 
@@ -29,13 +38,12 @@ export function useQrPreview(input: RenderInput | null): PreviewState {
     if (!key) return
     const current = JSON.parse(key) as RenderInput
     let cancelled = false
-    let url: string | null = null
 
     const timer = setTimeout(async () => {
       try {
         const { blob, analysis, ecl } = await renderQr(current, PREVIEW_SIZE, 'png')
         if (cancelled) return
-        url = URL.createObjectURL(blob)
+        const url = URL.createObjectURL(blob)
         setState({ status: 'ready', url, blob, payload: current.payload, analysis, ecl, scan: { status: 'checking' } })
         let scan: ReadyPreview['scan']
         try {
@@ -57,8 +65,6 @@ export function useQrPreview(input: RenderInput | null): PreviewState {
     return () => {
       cancelled = true
       clearTimeout(timer)
-      // The image stays on screen until the next render lands, so release it a little later.
-      if (url) setTimeout(() => URL.revokeObjectURL(url!), 2000)
     }
   }, [key])
 

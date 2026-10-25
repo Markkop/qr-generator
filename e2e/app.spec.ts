@@ -144,6 +144,21 @@ test('round-trips unicode text through the scanner', async ({ page }) => {
   await expectScans(page)
 })
 
+test('keeps preview images readable when switching types after a pause', async ({ page }) => {
+  await page.clock.install()
+  await page.getByLabel('Endereço do site', { exact: true }).fill('example.com')
+  await expectScans(page)
+
+  await page.getByRole('tab', { name: 'Texto', exact: true }).click()
+  await expect(page.getByTestId('device-demo')).toBeVisible()
+  await page.clock.fastForward(3000)
+  await page.getByRole('textbox', { name: 'Texto', exact: true }).fill('After a pause')
+  await expectScans(page)
+  expect(
+    await page.getByTestId('qr-preview').evaluate((image: HTMLImageElement) => image.naturalWidth),
+  ).toBeGreaterThan(0)
+})
+
 test('builds Wi-Fi codes and skips history when auto-save is off', async ({ page }) => {
   await openHistory(page)
   await page.getByRole('button', { name: 'Backup e opções' }).click()

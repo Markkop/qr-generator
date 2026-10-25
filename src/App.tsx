@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Moon, QrCode, Sun } from 'lucide-react'
 import { ContentForm } from './components/ContentForm'
 import { HistoryPanel } from './components/HistoryPanel'
@@ -47,6 +47,15 @@ export default function App() {
   const [style, setStyle] = useState<QrStyle>(DEFAULT_STYLE)
   const [logo, setLogo] = useState<string | null>(null)
   const persistRequested = useRef(false)
+  const editor = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const panel = editor.current
+    const inset = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)
+    if (panel && panel.getBoundingClientRect().top < inset) {
+      panel.scrollIntoView({ block: 'start', behavior: 'instant' })
+    }
+  }, [type])
 
   const current = fields[type]
   const built = useMemo(() => buildPayload(type, current), [type, current])
@@ -182,7 +191,7 @@ export default function App() {
       >
         {t('app.skip')}
       </a>
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4">
+      <header className="mx-auto flex w-full max-w-[1440px] items-center justify-between gap-2 px-4 py-4 sm:gap-3 sm:px-6 lg:px-8 lg:py-5">
         <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-2.5">
           <span className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-indigo-600 text-white sm:size-9">
             <QrCode className="size-4 sm:size-5" aria-hidden />
@@ -205,7 +214,7 @@ export default function App() {
               onClick={() => updatePrefs({ theme: prefs.theme === 'dark' ? 'light' : 'dark' })}
               aria-label={t(prefs.theme === 'dark' ? 'theme.dark' : 'theme.light')}
               title={t(prefs.theme === 'dark' ? 'theme.darkName' : 'theme.lightName')}
-              className="inline-flex size-8 items-center justify-center rounded-lg border border-zinc-200 bg-soft text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:hidden dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+              className="inline-flex size-11 items-center justify-center rounded-xl border border-zinc-200 bg-soft text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:hidden dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               {prefs.theme === 'dark' ? (
                 <Moon className="size-4" aria-hidden />
@@ -241,43 +250,63 @@ export default function App() {
         </div>
       </header>
 
-      <main id="main" className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-6 px-4 pb-10 sm:px-6">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_24rem] lg:grid-rows-[auto_1fr]">
-          <Card className="flex flex-col gap-5">
+      <main id="main" className="mx-auto w-full max-w-[1440px] flex-1 px-4 pt-2 pb-10 sm:px-6 lg:px-8 lg:pt-3">
+        <div className="workspace-layout">
+          <aside className="type-panel" aria-labelledby="type-panel-title">
+            <h2 id="type-panel-title" className="type-panel-title">
+              {t('tabs.label')}
+            </h2>
             <TypeTabs value={type} onChange={setType} />
-            <div id={PANEL_ID} role="tabpanel" aria-labelledby={tabId(type)}>
-              <ContentForm key={type} type={type} fields={current} errors={built.errors} onChange={updateFields} />
+          </aside>
+
+          <div ref={editor} className="editor-layout">
+            <Card className="content-card flex min-w-0 flex-col gap-5">
+              <div className="border-b border-zinc-200 pb-4 dark:border-zinc-800">
+                <p className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('editor.content')}</p>
+                <h2 className="text-xl leading-tight font-semibold tracking-tight">{t(typeLabelKey(type))}</h2>
+              </div>
+              <div
+                id={PANEL_ID}
+                role="tabpanel"
+                aria-labelledby={tabId(type)}
+                tabIndex={0}
+                className="min-w-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500"
+              >
+                <ContentForm key={type} type={type} fields={current} errors={built.errors} onChange={updateFields} />
+              </div>
+            </Card>
+
+            <div className="preview-column">
+              <PreviewPanel
+                state={preview}
+                actionsReady={Boolean(ready)}
+                type={type}
+                notices={translatedNotices}
+                alt={t('preview.alt', { type: t(typeLabelKey(type)), description })}
+                prefs={prefs}
+                onPrefsChange={updatePrefs}
+                onDownload={onDownload}
+                onCopyImage={onCopyImage}
+                onCopyText={onCopyText}
+                onShare={SHARE_SUPPORTED ? onShare : undefined}
+                onSave={() => void record(true)}
+                canCopyImage={COPY_SUPPORTED}
+              />
             </div>
-          </Card>
 
-          <div className="lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
-            <PreviewPanel
-              state={preview}
-              actionsReady={Boolean(ready)}
-              type={type}
-              notices={translatedNotices}
-              alt={t('preview.alt', { type: t(typeLabelKey(type)), description })}
-              prefs={prefs}
-              onPrefsChange={updatePrefs}
-              onDownload={onDownload}
-              onCopyImage={onCopyImage}
-              onCopyText={onCopyText}
-              onShare={SHARE_SUPPORTED ? onShare : undefined}
-              onSave={() => void record(true)}
-              canCopyImage={COPY_SUPPORTED}
-            />
+            <div className="style-column min-w-0">
+              <StylePanel
+                style={style}
+                logo={logo}
+                onStyleChange={(patch) => setStyle((s) => ({ ...s, ...patch }))}
+                onLogoChange={setLogo}
+                onReset={() => {
+                  setStyle(DEFAULT_STYLE)
+                  setLogo(null)
+                }}
+              />
+            </div>
           </div>
-
-          <StylePanel
-            style={style}
-            logo={logo}
-            onStyleChange={(patch) => setStyle((s) => ({ ...s, ...patch }))}
-            onLogoChange={setLogo}
-            onReset={() => {
-              setStyle(DEFAULT_STYLE)
-              setLogo(null)
-            }}
-          />
         </div>
       </main>
 
