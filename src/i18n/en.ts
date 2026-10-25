@@ -21,7 +21,6 @@ export const en: Messages = {
   'field.clearFrom': 'Clear {label}',
 
   'tabs.label': 'Content type',
-  'editor.content': 'Your content',
   'preview.title': 'Preview & download',
   'type.url': 'URL',
   'type.text': 'Text',

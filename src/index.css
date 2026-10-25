@@ -43,7 +43,7 @@ body {
 }
 
 html {
-  scroll-padding-top: 15rem;
+  scroll-padding-top: 13rem;
 }
 
 .workspace-layout,
@@ -64,14 +64,6 @@ html {
   border-radius: 1rem;
   background: var(--surface);
   box-shadow: 0 2px 8px rgb(39 39 42 / 0.04);
-}
-
-.type-panel-title {
-  margin: 0 0 0.5rem 0.25rem;
-  color: var(--color-zinc-500);
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1.25rem;
 }
 
 .type-tabs {
@@ -107,10 +99,6 @@ html {
   border-color: var(--color-zinc-800);
 }
 
-:root.dark .type-panel-title {
-  color: var(--color-zinc-400);
-}
-
 @media (min-width: 640px) {
   html {
     scroll-padding-top: 2rem;
@@ -131,10 +119,6 @@ html {
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--color-zinc-300) transparent;
-  }
-
-  .type-panel-title {
-    margin: 0.25rem 0.5rem 0.75rem;
   }
 
   .type-tabs {

@@ -252,19 +252,12 @@ export default function App() {
 
       <main id="main" className="mx-auto w-full max-w-[1440px] flex-1 px-4 pt-2 pb-10 sm:px-6 lg:px-8 lg:pt-3">
         <div className="workspace-layout">
-          <aside className="type-panel" aria-labelledby="type-panel-title">
-            <h2 id="type-panel-title" className="type-panel-title">
-              {t('tabs.label')}
-            </h2>
+          <aside className="type-panel" aria-label={t('tabs.label')}>
             <TypeTabs value={type} onChange={setType} />
           </aside>
 
           <div ref={editor} className="editor-layout">
-            <Card className="content-card flex min-w-0 flex-col gap-5">
-              <div className="border-b border-zinc-200 pb-4 dark:border-zinc-800">
-                <p className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">{t('editor.content')}</p>
-                <h2 className="text-xl leading-tight font-semibold tracking-tight">{t(typeLabelKey(type))}</h2>
-              </div>
+            <Card className="content-card min-w-0">
               <div
                 id={PANEL_ID}
                 role="tabpanel"
