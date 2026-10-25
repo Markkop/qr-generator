@@ -1,6 +1,8 @@
 import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { clearHistory, deleteEntry, exportHistory, importHistory, prune, QrDatabase, saveEntry, setPinned } from './db'
+import { createTranslator } from '../i18n/context'
+import { createDemoExample } from './device-preview'
 import { DEFAULT_STYLE } from './qr/style'
 
 let database: QrDatabase
@@ -69,6 +71,23 @@ describe('history', () => {
     expect(await other.logos.count()).toBe(1)
     other.close()
     await other.delete()
+  })
+
+  it('preserves Pix, calendar identity, and Telegram through backup import', async () => {
+    const { t } = createTranslator('en')
+    const examples = (['pix', 'calendar', 'telegram'] as const).map((type) => {
+      const example = createDemoExample(type, t)
+      return { type, fields: example.fields[type], payload: example.payload, style: DEFAULT_STYLE, logo: null }
+    })
+    for (const input of examples) await saveEntry(input, database)
+    const backup = JSON.parse(JSON.stringify(await exportHistory(database)))
+    await clearHistory(database)
+    expect(await importHistory(backup, database)).toBe(3)
+    for (const input of examples) {
+      const entry = await database.entries.where('type').equals(input.type).first()
+      expect(entry?.fields).toEqual(input.fields)
+      expect(entry?.payload).toBe(input.payload)
+    }
   })
 
   it('rebuilds payloads on import instead of trusting the file', async () => {

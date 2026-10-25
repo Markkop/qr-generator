@@ -1,5 +1,7 @@
 import type { Message, MessageKey } from '../../i18n/messages'
 import type { ContentType, FieldsByType } from './types'
+import { buildPix } from './pix'
+import { buildCalendar } from './calendar'
 
 export interface BuildResult {
   /** Null while required fields are missing or a field is invalid. */
@@ -138,6 +140,55 @@ function buildSms({ number, message }: FieldsByType['sms']): BuildResult {
   return result(`SMSTO:${normalized}:${message}`, { warnings: phoneWarnings(normalized) })
 }
 
+export function normalizeTelegramUsername(input: string): string | null {
+  let username = input.trim()
+  if (/^(?:https?:\/\/)?(?:t\.me|telegram\.me)\//i.test(username)) {
+    try {
+      const url = new URL(/^https?:/i.test(username) ? username : `https://${username}`)
+      if (url.search || url.hash || url.port || url.username || url.password) return null
+      username = url.pathname.replace(/^\//, '').replace(/\/$/, '')
+    } catch {
+      return null
+    }
+  } else username = username.replace(/^@/, '')
+  const reserved = new Set([
+    'share',
+    'joinchat',
+    'addstickers',
+    'addemoji',
+    'addtheme',
+    'addlist',
+    'addlanguage',
+    'login',
+    'socks',
+    'proxy',
+    'iv',
+    'c',
+    's',
+    'contact',
+    'confirmphone',
+    'passport',
+    'bg',
+    'boost',
+    'invoice',
+    'giftcode',
+    'auth',
+    'resolve',
+    'setlanguage',
+  ])
+  return /^[A-Za-z][A-Za-z0-9_]{0,31}$/.test(username) && !reserved.has(username.toLowerCase()) ? username : null
+}
+
+function buildTelegram({ username: input, message }: FieldsByType['telegram']): BuildResult {
+  if (!input.trim()) return result(null)
+  const username = normalizeTelegramUsername(input)
+  if (!username) return result(null, { errors: { username: msg('error.telegramUsername') } })
+  const draft = message.trim()
+  const text = draft.startsWith('@') ? ` ${draft}` : draft
+  if ([...text].length > 4096) return result(null, { errors: { message: msg('error.telegramMessage') } })
+  return result(`https://t.me/${username}${text ? `?text=${encodeURIComponent(text)}` : ''}`)
+}
+
 function buildContact(f: FieldsByType['contact']): BuildResult {
   const first = f.firstName.trim()
   const last = f.lastName.trim()
@@ -199,6 +250,12 @@ export function buildPayload<T extends ContentType>(type: T, fields: FieldsByTyp
       return buildContact(fields as FieldsByType['contact'])
     case 'location':
       return buildLocation(fields as FieldsByType['location'])
+    case 'pix':
+      return buildPix(fields as FieldsByType['pix'])
+    case 'calendar':
+      return buildCalendar(fields as FieldsByType['calendar'])
+    case 'telegram':
+      return buildTelegram(fields as FieldsByType['telegram'])
     default:
       throw new Error(`Unknown content type: ${type satisfies never}`)
   }
@@ -234,6 +291,12 @@ export function describe<T extends ContentType>(type: T, fields: FieldsByType[T]
       const l = fields as FieldsByType['location']
       return `${l.latitude.trim()}, ${l.longitude.trim()}`
     }
+    case 'pix':
+      return (fields as FieldsByType['pix']).name.trim()
+    case 'calendar':
+      return (fields as FieldsByType['calendar']).title.trim()
+    case 'telegram':
+      return normalizeTelegramUsername((fields as FieldsByType['telegram']).username) || ''
     default:
       throw new Error(`Unknown content type: ${type satisfies never}`)
   }

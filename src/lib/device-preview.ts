@@ -51,6 +51,18 @@ export function createDemoExample(type: ContentType, t: Translate) {
       email: 'ana@example.com',
     },
     location: { latitude: '-23.5505', longitude: '-46.6333' },
+    pix: { keyType: 'email', key: 'ana@example.com', name: 'Ana Silva', city: 'Sao Paulo', amount: '25.00', txid: '' },
+    calendar: {
+      title: t('demo.sample.event'),
+      start: '2026-11-15T09:00',
+      end: '2026-11-15T10:00',
+      allDay: false,
+      timeZone: 'America/Sao_Paulo',
+      location: 'Studio',
+      description: '',
+      createdAt: '2026-10-25T12:00:00Z',
+    },
+    telegram: { username: 'ana_example', message: t('demo.sample.message') },
   }
   const payload = buildPayload(type, fields[type]).payload
   if (!payload) throw new Error('The scan illustration needs a valid example.')

@@ -1,8 +1,23 @@
-export const CONTENT_TYPES = ['url', 'text', 'wifi', 'email', 'phone', 'whatsapp', 'sms', 'contact', 'location'] as const
+export const CONTENT_TYPES = [
+  'url',
+  'text',
+  'wifi',
+  'email',
+  'phone',
+  'whatsapp',
+  'sms',
+  'contact',
+  'location',
+  'pix',
+  'calendar',
+  'telegram',
+] as const
 
 export type ContentType = (typeof CONTENT_TYPES)[number]
 
 export type WifiEncryption = 'WPA' | 'WEP' | 'nopass'
+export const PIX_KEY_TYPES = ['email', 'phone', 'cpf', 'cnpj', 'random'] as const
+export type PixKeyType = (typeof PIX_KEY_TYPES)[number]
 
 export interface FieldsByType {
   url: { url: string }
@@ -28,6 +43,18 @@ export interface FieldsByType {
     note: string
   }
   location: { latitude: string; longitude: string }
+  pix: { keyType: PixKeyType; key: string; name: string; city: string; amount: string; txid: string }
+  calendar: {
+    title: string
+    start: string
+    end: string
+    allDay: boolean
+    timeZone: string
+    location: string
+    description: string
+    createdAt: string
+  }
+  telegram: { username: string; message: string }
 }
 
 export type Fields<T extends ContentType = ContentType> = FieldsByType[T]
@@ -58,6 +85,18 @@ export const DEFAULT_FIELDS: AllFields = {
     note: '',
   },
   location: { latitude: '', longitude: '' },
+  pix: { keyType: 'email', key: '', name: '', city: '', amount: '', txid: '' },
+  calendar: {
+    title: '',
+    start: '',
+    end: '',
+    allDay: false,
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    location: '',
+    description: '',
+    createdAt: new Date().toISOString(),
+  },
+  telegram: { username: '', message: '' },
 }
 
 export function typeLabelKey<T extends ContentType>(type: T) {

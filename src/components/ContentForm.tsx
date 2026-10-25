@@ -1,9 +1,17 @@
 import { useRef, useState, type InputHTMLAttributes } from 'react'
-import { Eye, EyeOff, LocateFixed } from 'lucide-react'
+import { Eye, EyeOff, FileDown, LocateFixed } from 'lucide-react'
 import { useI18n } from '../i18n/context'
 import type { Message, MessageKey } from '../i18n/messages'
-import type { ContentType, FieldsByType, WifiEncryption } from '../lib/payload/types'
-import { Button, Field, FieldActions, PasteArea, PasteInput, Segmented, Switch, TextInput } from './ui'
+import {
+  PIX_KEY_TYPES,
+  type ContentType,
+  type FieldsByType,
+  type PixKeyType,
+  type WifiEncryption,
+} from '../lib/payload/types'
+import { buildCalendar } from '../lib/payload/calendar'
+import { downloadBlob } from '../lib/export'
+import { Button, Field, FieldActions, PasteArea, PasteInput, Segmented, Select, Switch, TextInput } from './ui'
 import { useToast } from './toast-context'
 
 interface FormProps<T extends ContentType> {
@@ -384,6 +392,204 @@ function LocationForm({ fields, errors, onChange }: FormProps<'location'>) {
   )
 }
 
+function PixForm({ fields, errors, onChange }: FormProps<'pix'>) {
+  const { t } = useI18n()
+  const error = useErrorText(errors)
+  const text = (
+    key: 'key' | 'name' | 'city' | 'amount' | 'txid',
+    extra: InputHTMLAttributes<HTMLInputElement> = {},
+  ) => (
+    <Field
+      label={t(`pix.${key}`)}
+      error={error(key)}
+      hint={key === 'key' ? t('pix.keyHint') : key === 'amount' ? t('pix.amountHint') : undefined}
+    >
+      {(p) => (
+        <PasteInput
+          {...p}
+          {...extra}
+          label={t(`pix.${key}`)}
+          value={fields[key]}
+          onChange={(e) => onChange({ [key]: e.target.value })}
+        />
+      )}
+    </Field>
+  )
+  return (
+    <div className="flex flex-col gap-4">
+      <Field label={t('pix.keyType')}>
+        {(p) => (
+          <Select
+            {...p}
+            value={fields.keyType}
+            onChange={(e) => onChange({ keyType: e.target.value as PixKeyType, key: '' })}
+          >
+            {PIX_KEY_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {t(`pix.keyType.${type}`)}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
+      {text('key', {
+        autoComplete: 'off',
+        spellCheck: false,
+        placeholder: t(`pix.placeholder.${fields.keyType}`),
+        inputMode:
+          fields.keyType === 'email'
+            ? 'email'
+            : fields.keyType === 'phone'
+              ? 'tel'
+              : fields.keyType === 'cpf'
+                ? 'numeric'
+                : 'text',
+      })}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {text('name', { placeholder: t('pix.namePlaceholder') })}
+        {text('city', { placeholder: 'São Paulo' })}
+        {text('amount', { inputMode: 'decimal', placeholder: '25,00' })}
+        {text('txid', { maxLength: 25, placeholder: 'PEDIDO123' })}
+      </div>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('pix.help')}</p>
+    </div>
+  )
+}
+
+function CalendarForm({ fields, errors, onChange }: FormProps<'calendar'>) {
+  const { t } = useI18n()
+  const error = useErrorText(errors)
+  const [zones] = useState(() => {
+    try {
+      return [...new Set([fields.timeZone, 'UTC', ...Intl.supportedValuesOf('timeZone')])].sort()
+    } catch {
+      return [...new Set([fields.timeZone, 'UTC'])]
+    }
+  })
+  const payload = buildCalendar(fields).payload
+  return (
+    <div className="flex flex-col gap-4">
+      <Field label={t('calendar.title')} error={error('title')}>
+        {(p) => (
+          <PasteInput
+            {...p}
+            label={t('calendar.title')}
+            value={fields.title}
+            onChange={(e) => onChange({ title: e.target.value })}
+            placeholder={t('calendar.titlePlaceholder')}
+          />
+        )}
+      </Field>
+      <Switch
+        checked={fields.allDay}
+        onChange={(allDay) =>
+          onChange({
+            allDay,
+            start: fields.start ? fields.start.slice(0, 10) + (allDay ? '' : 'T09:00') : '',
+            end: fields.end ? fields.end.slice(0, 10) + (allDay ? '' : 'T10:00') : '',
+          })
+        }
+        label={t('calendar.allDay')}
+      />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {(['start', 'end'] as const).map((key) => (
+          <Field key={key} label={t(fields.allDay ? `calendar.${key}Date` : `calendar.${key}`)} error={error(key)}>
+            {(p) => (
+              <PasteInput
+                {...p}
+                label={t(fields.allDay ? `calendar.${key}Date` : `calendar.${key}`)}
+                type={fields.allDay ? 'date' : 'datetime-local'}
+                className="basis-full"
+                value={fields[key]}
+                onChange={(e) => onChange({ [key]: e.target.value })}
+              />
+            )}
+          </Field>
+        ))}
+      </div>
+      {!fields.allDay && (
+        <Field label={t('calendar.timeZone')} error={error('timeZone')} hint={t('calendar.zoneHint')}>
+          {(p) => (
+            <Select {...p} value={fields.timeZone} onChange={(e) => onChange({ timeZone: e.target.value })}>
+              {zones.map((zone) => (
+                <option key={zone} value={zone}>
+                  {zone.replaceAll('_', ' ')}
+                </option>
+              ))}
+            </Select>
+          )}
+        </Field>
+      )}
+      <Field label={t('calendar.location')}>
+        {(p) => (
+          <PasteInput
+            {...p}
+            label={t('calendar.location')}
+            value={fields.location}
+            onChange={(e) => onChange({ location: e.target.value })}
+          />
+        )}
+      </Field>
+      <Field label={t('calendar.description')}>
+        {(p) => (
+          <PasteArea
+            {...p}
+            label={t('calendar.description')}
+            value={fields.description}
+            onChange={(e) => onChange({ description: e.target.value })}
+            rows={3}
+          />
+        )}
+      </Field>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          disabled={!payload}
+          onClick={() => {
+            if (payload) downloadBlob(new Blob([payload], { type: 'text/calendar;charset=utf-8' }), 'evento.ics')
+          }}
+        >
+          <FileDown className="size-4" aria-hidden />
+          {t('calendar.download')}
+        </Button>
+        <p className="min-w-40 flex-1 text-xs text-zinc-500 dark:text-zinc-400">{t('calendar.help')}</p>
+      </div>
+    </div>
+  )
+}
+
+function TelegramForm({ fields, errors, onChange }: FormProps<'telegram'>) {
+  const { t } = useI18n()
+  const error = useErrorText(errors)
+  return (
+    <div className="flex flex-col gap-4">
+      <Field label={t('telegram.username')} error={error('username')} hint={t('telegram.hint')}>
+        {(p) => (
+          <PasteInput
+            {...p}
+            label={t('telegram.username')}
+            placeholder="@usuario"
+            autoComplete="off"
+            spellCheck={false}
+            value={fields.username}
+            onChange={(e) => onChange({ username: e.target.value })}
+          />
+        )}
+      </Field>
+      <Field label={t('sms.message')} error={error('message')} hint={t('telegram.messageHint')}>
+        {(p) => (
+          <PasteArea
+            {...p}
+            label={t('sms.message')}
+            rows={3}
+            value={fields.message}
+            onChange={(e) => onChange({ message: e.target.value })}
+          />
+        )}
+      </Field>
+    </div>
+  )
+}
+
 const FORMS: { [T in ContentType]: (props: FormProps<T>) => React.JSX.Element } = {
   url: UrlForm,
   text: TextForm,
@@ -394,6 +600,9 @@ const FORMS: { [T in ContentType]: (props: FormProps<T>) => React.JSX.Element } 
   sms: SmsForm,
   contact: ContactForm,
   location: LocationForm,
+  pix: PixForm,
+  calendar: CalendarForm,
+  telegram: TelegramForm,
 }
 
 export function ContentForm<T extends ContentType>({ type, ...props }: FormProps<T> & { type: T }) {

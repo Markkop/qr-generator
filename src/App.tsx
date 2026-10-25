@@ -207,7 +207,11 @@ export default function App() {
               title={t(prefs.theme === 'dark' ? 'theme.darkName' : 'theme.lightName')}
               className="inline-flex size-8 items-center justify-center rounded-lg border border-zinc-200 bg-soft text-zinc-700 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:hidden dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
-              {prefs.theme === 'dark' ? <Moon className="size-4" aria-hidden /> : <Sun className="size-4" aria-hidden />}
+              {prefs.theme === 'dark' ? (
+                <Moon className="size-4" aria-hidden />
+              ) : (
+                <Sun className="size-4" aria-hidden />
+              )}
             </button>
             <div
               role="group"
@@ -249,6 +253,7 @@ export default function App() {
           <div className="lg:sticky lg:top-6 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
             <PreviewPanel
               state={preview}
+              actionsReady={Boolean(ready)}
               type={type}
               notices={translatedNotices}
               alt={t('preview.alt', { type: t(typeLabelKey(type)), description })}

@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import {
   ArrowRight,
   BatteryFull,
+  CalendarDays,
+  Landmark,
   BookOpen,
   Check,
   ChevronDown,
@@ -51,6 +53,9 @@ const ICONS: Record<ContentType, LucideIcon> = {
   sms: MessageCircle,
   contact: UserRound,
   location: MapPin,
+  pix: Landmark,
+  calendar: CalendarDays,
+  telegram: Send,
 }
 
 const reducedQuery = '(prefers-reduced-motion: reduce)'
@@ -182,6 +187,53 @@ function ResultScreen({ type, os, example }: { type: ContentType; os: DemoOS; ex
               <ArrowRight />
             </span>
           </div>
+        </div>
+      ) : type === 'telegram' ? (
+        <div className="demo-messages">
+          <div className="demo-recipient">
+            <small>Telegram</small>
+            <span>@{example.fields.telegram.username}</span>
+          </div>
+          <p className="demo-draft-label">{t('demo.draft')}</p>
+          <div className="demo-composer">
+            <Plus />
+            <span>{example.fields.telegram.message}</span>
+            <span className="demo-send">
+              <Send />
+            </span>
+          </div>
+        </div>
+      ) : type === 'pix' ? (
+        <div className="demo-event-card">
+          <div className="demo-result-icon">
+            <Landmark />
+          </div>
+          <small>Pix</small>
+          <h3>{t('demo.pix.review')}</h3>
+          <strong className="demo-pix-amount">R$ 25,00</strong>
+          <p>
+            Ana Silva
+            <br />
+            <small>ana@example.com</small>
+          </p>
+          <div className="demo-native-action">{t('demo.pix.action')}</div>
+        </div>
+      ) : type === 'calendar' ? (
+        <div className="demo-event-card">
+          <div className="demo-result-icon">
+            <CalendarDays />
+          </div>
+          <small>{t('type.calendar')}</small>
+          <h3>{example.fields.calendar.title}</h3>
+          <p>
+            {t('demo.calendar.time')}
+            <br />
+            <small>{t('demo.calendar.zone')}</small>
+          </p>
+          <p>
+            <MapPin className="demo-inline-icon" /> Studio
+          </p>
+          <div className="demo-native-action">{t('demo.calendar.action')}</div>
         </div>
       ) : type === 'sms' ? (
         <div className="demo-messages">
@@ -372,9 +424,19 @@ function DevicePreviewScene({
             <div className="demo-camera-cutout" />
             <div className="demo-camera-ui">
               <div className="demo-camera-top">
-                <ZapOff />
-                <ChevronDown />
-                <span>HD</span>
+                {type === 'pix' ? (
+                  <>
+                    <ChevronLeft />
+                    <strong>Pix</strong>
+                    <Landmark />
+                  </>
+                ) : (
+                  <>
+                    <ZapOff />
+                    <ChevronDown />
+                    <span>HD</span>
+                  </>
+                )}
               </div>
               <div className="demo-viewfinder">
                 <div className="demo-desk">
@@ -402,16 +464,22 @@ function DevicePreviewScene({
                 <ChevronRight />
               </div>
               <div className="demo-tap-indicator" />
-              <div className="demo-camera-modes">
-                <span>{t('demo.camera.video')}</span>
-                <strong>{t('demo.camera.photo')}</strong>
-                <span>{t('demo.camera.portrait')}</span>
-              </div>
-              <div className="demo-camera-controls">
-                <span className="demo-gallery" />
-                <span className="demo-shutter" />
-                <SwitchCamera />
-              </div>
+              {type === 'pix' ? (
+                <p className="demo-bank-scanner">{t('demo.pix.scan')}</p>
+              ) : (
+                <>
+                  <div className="demo-camera-modes">
+                    <span>{t('demo.camera.video')}</span>
+                    <strong>{t('demo.camera.photo')}</strong>
+                    <span>{t('demo.camera.portrait')}</span>
+                  </div>
+                  <div className="demo-camera-controls">
+                    <span className="demo-gallery" />
+                    <span className="demo-shutter" />
+                    <SwitchCamera />
+                  </div>
+                </>
+              )}
             </div>
             <ResultScreen type={type} os={os} example={example} />
             <div className="demo-home-indicator" />
@@ -424,7 +492,15 @@ function DevicePreviewScene({
           <span className="demo-caption-eyebrow">
             {t(typeLabelKey(type))} · {os === 'ios' ? 'iOS' : 'Android'}
           </span>
-          <p>{t(phase === 'open' ? `demo.result.${type}` : `demo.phase.${phase}`)}</p>
+          <p>
+            {t(
+              phase === 'open'
+                ? `demo.result.${type}`
+                : type === 'pix' && phase === 'aim'
+                  ? 'demo.pix.scan'
+                  : `demo.phase.${phase}`,
+            )}
+          </p>
         </div>
         <div className="demo-playback">
           {!reducedMotion && (

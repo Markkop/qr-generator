@@ -1,12 +1,14 @@
 # QR Generator
 
-Make QR codes for links, text, Wi-Fi, email, phone, SMS, contacts and locations. Style them, add a logo, and download PNG, SVG, JPEG or WebP, or copy the image straight to the clipboard.
+Make QR codes for links, text, Wi-Fi, email, phone, WhatsApp, SMS, contacts, locations, Pix, calendar events and Telegram. Style them, add a logo, and download PNG, SVG, JPEG or WebP, or copy the image straight to the clipboard.
 
 Everything runs in the browser. There is no backend, no account and no tracking. History lives in IndexedDB on your device, and the app works offline once loaded.
 
 ## Features
 
-- Eight content types with the payload formats phones understand: `https://`, `WIFI:`, `mailto:`, `tel:`, `SMSTO:`, vCard 3.0 and `geo:`. Special characters are escaped per the ZXing and RFC 6350 conventions.
+- Twelve content types: links, text, Wi-Fi, email, phone, WhatsApp, SMS, vCard contacts, locations, static Pix, iCalendar events and Telegram public links.
+- Pix supports registered email, phone, CPF, numeric or alphanumeric CNPJ and random keys, optional exact BRL amounts and references, with BR Code CRC validation. Scan with your banking app and review before paying.
+- Calendar events support explicit time zones, all-day ranges and an `.ics` download. Camera support varies by scanner. Telegram links open a public profile, group or channel, with an optional message draft.
 - Live preview with a built-in scan check. Every render is decoded with [zxing-wasm](https://github.com/Sec-ant/zxing-wasm) and compared to the expected content, so you know before printing whether it scans.
 - Defaults from the QR spec: a 4-module quiet zone, error correction M, raised to H automatically when a logo is added, and a logo knockout capped at about 12% of the code area.
 - Warnings for low contrast, inverted colors, dense codes, small margins and insecure `http://` links.

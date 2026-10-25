@@ -31,6 +31,9 @@ describe('illustration examples', () => {
       sms: 'SMSTO:+12025550123:',
       contact: 'BEGIN:VCARD\r\nVERSION:3.0',
       location: 'geo:-23.5505,-46.6333',
+      pix: '000201',
+      calendar: 'BEGIN:VCALENDAR\r\nVERSION:2.0',
+      telegram: 'https://t.me/ana_example?text=',
     }
     for (const type of CONTENT_TYPES) {
       const example = createDemoExample(type, t)

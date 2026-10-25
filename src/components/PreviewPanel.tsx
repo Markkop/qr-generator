@@ -26,6 +26,7 @@ export interface Notice {
 
 interface Props {
   state: PreviewState
+  actionsReady: boolean
   type: ContentType
   notices: Notice[]
   alt: string
@@ -76,7 +77,7 @@ function ScanBadge({ state }: { state: Extract<PreviewState, { status: 'ready' }
 export function PreviewPanel(props: Props) {
   const { t } = useI18n()
   const { state, type, notices, alt, prefs, onPrefsChange } = props
-  const ready = state.status === 'ready'
+  const ready = props.actionsReady
 
   return (
     <Card className="flex flex-col gap-4">

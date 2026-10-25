@@ -29,7 +29,7 @@ test('plays a scan, pauses, replays, and yields to the real QR code', async ({ p
 test.describe('illustrations with reduced motion', () => {
   test.use({ reducedMotion: 'reduce' })
 
-  test('shows each of the eight result types on both operating systems, without navigating', async ({ page }) => {
+  test('shows each of the twelve result types on both operating systems, without navigating', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     await page.goto('/')
@@ -42,6 +42,10 @@ test.describe('illustrations with reduced motion', () => {
       ['E-mail', 'email', 'Mail', 'Gmail'],
       ['Telefone', 'phone', 'Telefone', 'Telefone'],
       ['SMS', 'sms', 'Mensagens', 'Google Messages'],
+      ['WhatsApp', 'whatsapp', 'WhatsApp', 'WhatsApp'],
+      ['Pix', 'pix', 'App do banco', 'App do banco'],
+      ['Calendário', 'calendar', 'Calendário', 'Google Calendar'],
+      ['Telegram', 'telegram', 'Telegram', 'Telegram'],
       ['Contato', 'contact', 'Contatos', 'Google Contacts'],
       ['Localização', 'location', 'Mapas', 'Google Maps'],
     ] as const

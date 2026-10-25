@@ -1,6 +1,9 @@
 import { useRef, type KeyboardEvent } from 'react'
 import {
   AtSign,
+  CalendarDays,
+  Landmark,
+  Send,
   Contact,
   Link,
   MapPin,
@@ -26,6 +29,9 @@ const ICONS: Record<ContentType, LucideIcon> = {
   sms: MessageSquare,
   contact: Contact,
   location: MapPin,
+  pix: Landmark,
+  calendar: CalendarDays,
+  telegram: Send,
 }
 
 export function TypeTabs({ value, onChange }: { value: ContentType; onChange: (type: ContentType) => void }) {
