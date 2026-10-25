@@ -340,6 +340,8 @@ export const ptBR = {
   'pix.txid': 'Identificador (opcional)',
   'pix.keyHint': 'Use uma chave já cadastrada no banco.',
   'pix.amountHint': 'Sem valor, quem paga escolhe o total.',
+  'pix.nameHint': 'Obrigatório no QR. O banco exibe o nome cadastrado na chave Pix.',
+  'pix.cityHint': 'Obrigatória no QR, mas pode não aparecer no app do banco.',
   'pix.namePlaceholder': 'Ana Silva',
   'pix.placeholder.email': 'ana@example.com',
   'pix.placeholder.phone': '+55 11 91234 5678',

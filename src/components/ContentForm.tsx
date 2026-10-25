@@ -395,15 +395,18 @@ function LocationForm({ fields, errors, onChange }: FormProps<'location'>) {
 function PixForm({ fields, errors, onChange }: FormProps<'pix'>) {
   const { t } = useI18n()
   const error = useErrorText(errors)
+  const hints = {
+    key: t('pix.keyHint'),
+    name: t('pix.nameHint'),
+    city: t('pix.cityHint'),
+    amount: t('pix.amountHint'),
+    txid: undefined,
+  }
   const text = (
     key: 'key' | 'name' | 'city' | 'amount' | 'txid',
     extra: InputHTMLAttributes<HTMLInputElement> = {},
   ) => (
-    <Field
-      label={t(`pix.${key}`)}
-      error={error(key)}
-      hint={key === 'key' ? t('pix.keyHint') : key === 'amount' ? t('pix.amountHint') : undefined}
-    >
+    <Field label={t(`pix.${key}`)} error={error(key)} hint={hints[key]}>
       {(p) => (
         <PasteInput
           {...p}

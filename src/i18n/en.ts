@@ -339,6 +339,8 @@ export const en: Messages = {
   'pix.txid': 'Reference (optional)',
   'pix.keyHint': 'Use a key already registered with your bank.',
   'pix.amountHint': 'Leave empty to let the payer enter the amount.',
+  'pix.nameHint': 'Required in the QR code. Your bank displays the name registered to the Pix key.',
+  'pix.cityHint': 'Required in the QR code, but your banking app may not display it.',
   'pix.namePlaceholder': 'Ana Silva',
   'pix.placeholder.email': 'ana@example.com',
   'pix.placeholder.phone': '+55 11 91234 5678',
