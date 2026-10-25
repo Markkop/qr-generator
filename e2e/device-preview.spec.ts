@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test'
+import { expect } from '@playwright/test'
+import { test } from './fixtures'
 
 test('plays a scan, pauses, replays, and yields to the real QR code', async ({ page }) => {
   await page.clock.install()

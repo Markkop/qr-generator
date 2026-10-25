@@ -1,4 +1,5 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, type Page } from '@playwright/test'
+import { test } from './fixtures'
 import { readFile } from 'node:fs/promises'
 
 const scanStatus = (page: Page) => page.getByTestId('scan-status')

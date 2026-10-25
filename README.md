@@ -4,6 +4,8 @@ Make QR codes for links, text, Wi-Fi, email, phone, WhatsApp, SMS, contacts, loc
 
 Everything runs in the browser. There is no backend, no account and no tracking. History lives in IndexedDB on your device, and the app works offline once loaded.
 
+Compact content cards below the inputs combine the filled-in details. Link previews make a direct, anonymous HTTPS request to the entered website for its title and description. They appear only after metadata loads; sites that block cross-origin reading, time out, or return no title leave no preview space. No proxy or third-party metadata service is used, and other content types stay on the device.
+
 ## Features
 
 - Twelve content types: links, text, Wi-Fi, email, phone, WhatsApp, SMS, vCard contacts, locations, static Pix, iCalendar events and Telegram public links.
@@ -51,7 +53,7 @@ e2e               Playwright tests, including a scan round trip for every type
 ## Notes
 
 - `qr-code-styling` passes text to its encoder one UTF-16 unit per byte, which garbles non-Latin text. `src/lib/qr/encode.ts` converts content to UTF-8 bytes first. The Unicode e2e test covers this.
-- The zxing wasm file is bundled rather than loaded from a CDN, so the scan check works offline and the CSP can stay at `'self'`.
+- The zxing wasm file is bundled rather than loaded from a CDN, so the scan check works offline. The CSP permits HTTPS connections for optional link metadata; scripts and images remain restricted to local sources.
 - Security headers live in `vercel.json`. `vite preview` serves the same headers, so the e2e suite runs under the production CSP and fails on any violation.
 
 ## Deployment

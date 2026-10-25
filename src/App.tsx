@@ -1,6 +1,7 @@
 import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Moon, QrCode, Sun } from 'lucide-react'
 import { ContentForm } from './components/ContentForm'
+import { ContentPreview } from './components/ContentPreview'
 import { HistoryPanel } from './components/HistoryPanel'
 import { PreviewPanel, type Notice } from './components/PreviewPanel'
 import { StylePanel } from './components/StylePanel'
@@ -266,6 +267,7 @@ export default function App() {
                 className="min-w-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500"
               >
                 <ContentForm key={type} type={type} fields={current} errors={built.errors} onChange={updateFields} />
+                <ContentPreview key={`${type}:${built.payload}`} type={type} fields={current} payload={built.payload} />
               </div>
             </Card>
 

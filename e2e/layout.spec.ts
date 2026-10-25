@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test'
+import { expect } from '@playwright/test'
+import { test } from './fixtures'
 
 test('keeps a vertical type selector beside the desktop editor while scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })

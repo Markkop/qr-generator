@@ -22,6 +22,15 @@ export const en: Messages = {
 
   'tabs.label': 'Content type',
   'preview.title': 'Preview & download',
+  'summary.label': 'Content preview',
+  'summary.subject': 'Subject',
+  'summary.message': 'Message',
+  'summary.description': 'Description',
+  'summary.amount': 'Amount',
+  'summary.reference': 'Reference',
+  'summary.yes': 'Yes',
+  'summary.openLink': 'Open link',
+  'summary.openLocation': 'Open location',
   'type.url': 'URL',
   'type.text': 'Text',
   'type.wifi': 'Wi-Fi',
@@ -317,7 +326,8 @@ export const en: Messages = {
     'Delete every saved QR code? This cannot be undone. Export a backup first if you want to keep them.',
   'history.cleared': 'History cleared.',
 
-  'footer.privacy': 'Everything runs in your browser. Nothing you type is uploaded, and there is no tracking.',
+  'footer.privacy':
+    'QR codes are created in your browser, with no tracking. Link previews request the website you enter.',
   'footer.madeWith': 'Made with',
   'footer.love': 'love',
   'footer.by': 'by',
