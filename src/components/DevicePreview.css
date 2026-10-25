@@ -1322,10 +1322,13 @@
   margin-top: 16px;
 }
 .demo-bank-scanner {
+  position: absolute;
+  bottom: 32px;
+  left: 14px;
+  right: 14px;
   margin: 0;
-  padding: 20px 18px;
   color: #fff;
   text-align: center;
-  font-size: 12px;
+  font-size: 10px;
   line-height: 1.5;
 }
