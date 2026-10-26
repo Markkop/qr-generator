@@ -89,6 +89,8 @@ test.describe('illustrations with reduced motion', () => {
   test('fits a small viewport in both themes and supports English', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 780 })
     await page.goto('/')
+    await expect(page.getByTestId('device-demo')).toHaveCount(0)
+    await page.getByText('Como é a leitura', { exact: true }).click()
     for (const theme of ['Tema: claro', 'Tema: escuro']) {
       await page.getByRole('button', { name: theme, exact: true }).click()
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

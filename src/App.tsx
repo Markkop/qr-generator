@@ -7,11 +7,12 @@ import { PreviewPanel, type Notice } from './components/PreviewPanel'
 import { StylePanel } from './components/StylePanel'
 import { useToast } from './components/toast-context'
 import { TypeTabs } from './components/TypeTabs'
-import { PANEL_ID, tabId } from './components/tabs'
+import { PANEL_ID, QR_OUTPUT_ID, TYPE_VALUE_ID, tabId } from './components/tabs'
 import { LanguageSelect } from './components/LanguageSelect'
 import { SiteBottomBar } from './components/SiteBottomBar'
 import { Card } from './components/ui'
 import { useQrPreview } from './hooks/useQrPreview'
+import { useMediaQuery } from './hooks/useMediaQuery'
 import { useI18n } from './i18n/context'
 import type { Message, MessageKey } from './i18n/messages'
 import { getLogo, requestPersistentStorage, saveEntry, type HistoryEntry } from './lib/db'
@@ -49,6 +50,7 @@ export default function App() {
   const [logo, setLogo] = useState<string | null>(null)
   const persistRequested = useRef(false)
   const editor = useRef<HTMLDivElement>(null)
+  const wideLayout = useMediaQuery('(min-width: 640px)')
 
   useLayoutEffect(() => {
     const panel = editor.current
@@ -255,14 +257,21 @@ export default function App() {
         <div className="workspace-layout">
           <aside className="type-panel" aria-label={t('tabs.label')}>
             <TypeTabs value={type} onChange={setType} />
+            <a
+              href={`#${QR_OUTPUT_ID}`}
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-lg bg-soft px-3 text-xs font-medium text-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-500 sm:hidden dark:text-indigo-300"
+            >
+              <QrCode className="size-4" aria-hidden />
+              {t('preview.jump')}
+            </a>
           </aside>
 
           <div ref={editor} className="editor-layout">
             <Card className="content-card min-w-0">
               <div
                 id={PANEL_ID}
-                role="tabpanel"
-                aria-labelledby={tabId(type)}
+                role={wideLayout ? 'tabpanel' : 'region'}
+                aria-labelledby={wideLayout ? tabId(type) : TYPE_VALUE_ID}
                 tabIndex={0}
                 className="min-w-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500"
               >
@@ -271,7 +280,24 @@ export default function App() {
               </div>
             </Card>
 
-            <div className="preview-column">
+            <div className="style-column min-w-0">
+              <StylePanel
+                style={style}
+                logo={logo}
+                onStyleChange={(patch) => setStyle((s) => ({ ...s, ...patch }))}
+                onLogoChange={setLogo}
+                onReset={() => {
+                  setStyle(DEFAULT_STYLE)
+                  setLogo(null)
+                }}
+              />
+            </div>
+
+            <div
+              id={QR_OUTPUT_ID}
+              tabIndex={-1}
+              className="preview-column rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+            >
               <PreviewPanel
                 state={preview}
                 actionsReady={Boolean(ready)}
@@ -286,19 +312,6 @@ export default function App() {
                 onShare={SHARE_SUPPORTED ? onShare : undefined}
                 onSave={() => void record(true)}
                 canCopyImage={COPY_SUPPORTED}
-              />
-            </div>
-
-            <div className="style-column min-w-0">
-              <StylePanel
-                style={style}
-                logo={logo}
-                onStyleChange={(patch) => setStyle((s) => ({ ...s, ...patch }))}
-                onLogoChange={setLogo}
-                onReset={() => {
-                  setStyle(DEFAULT_STYLE)
-                  setLogo(null)
-                }}
               />
             </div>
           </div>

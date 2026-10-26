@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test'
-import { test } from './fixtures'
+import { selectType, test } from './fixtures'
 import { readFile } from 'node:fs/promises'
 
 async function content(page: Page) {
@@ -86,7 +86,7 @@ test('new forms fit a small viewport in both languages and themes', async ({ pag
         await page.getByRole('button', { name: /^(Tema|Theme):/ }).click()
       }
       for (const name of ['Pix', language === 'en' ? 'Calendar' : 'Calendário', 'Telegram']) {
-        await page.getByRole('tab', { name, exact: true }).click()
+        await selectType(page, name)
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
       }
     }

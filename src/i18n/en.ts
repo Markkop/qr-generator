@@ -22,6 +22,7 @@ export const en: Messages = {
 
   'tabs.label': 'Content type',
   'preview.title': 'Preview & download',
+  'preview.jump': 'View QR',
   'summary.label': 'Content preview',
   'summary.subject': 'Subject',
   'summary.message': 'Message',

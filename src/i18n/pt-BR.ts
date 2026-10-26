@@ -20,6 +20,7 @@ export const ptBR = {
 
   'tabs.label': 'Tipo de conteúdo',
   'preview.title': 'Prévia e download',
+  'preview.jump': 'Ver QR',
   'summary.label': 'Prévia do conteúdo',
   'summary.subject': 'Assunto',
   'summary.message': 'Mensagem',

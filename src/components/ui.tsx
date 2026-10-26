@@ -46,7 +46,7 @@ export function Button({
 }
 
 const controlClass =
-  'min-w-0 w-full rounded-lg border border-zinc-300 bg-field px-3 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 aria-invalid:border-red-500'
+  'min-w-0 w-full rounded-lg border border-zinc-300 bg-field px-3 text-base sm:text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 aria-invalid:border-red-500'
 
 interface FieldProps {
   label: string
@@ -100,7 +100,7 @@ function writeControlValue(element: HTMLInputElement | HTMLTextAreaElement, valu
 }
 
 const fieldActionClass =
-  'inline-flex h-11 shrink-0 items-center gap-1.5 rounded-lg border border-zinc-300 bg-surface px-2.5 text-sm font-medium whitespace-nowrap text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
+  'inline-flex size-11 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-zinc-300 bg-surface text-sm font-medium whitespace-nowrap text-zinc-900 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 sm:w-auto sm:px-2.5 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800'
 
 function PasteButton({
   control,
@@ -115,6 +115,7 @@ function PasteButton({
     <button
       type="button"
       aria-label={t('field.pasteInto', { label })}
+      title={t('field.pasteInto', { label })}
       onClick={() => {
         const element = control.current
         if (!element) return
@@ -129,7 +130,7 @@ function PasteButton({
       className={fieldActionClass}
     >
       <ClipboardPaste className="size-4" aria-hidden />
-      {t('field.paste')}
+      <span className="hidden sm:inline">{t('field.paste')}</span>
     </button>
   )
 }
@@ -146,6 +147,7 @@ function ClearButton({
     <button
       type="button"
       aria-label={t('field.clearFrom', { label })}
+      title={t('field.clearFrom', { label })}
       onClick={() => {
         const element = control.current
         if (!element) return
@@ -155,7 +157,7 @@ function ClearButton({
       className={fieldActionClass}
     >
       <Eraser className="size-4" aria-hidden />
-      {t('field.clear')}
+      <span className="hidden sm:inline">{t('field.clear')}</span>
     </button>
   )
 }

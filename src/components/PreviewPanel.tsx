@@ -1,16 +1,20 @@
+import { useState } from 'react'
 import {
   AlertTriangle,
   BookmarkPlus,
   CheckCircle2,
   ClipboardCopy,
+  ChevronDown,
   Download,
   Image as ImageIcon,
   Loader2,
   Share2,
+  Smartphone,
   XCircle,
 } from 'lucide-react'
 import type { PreviewState } from '../hooks/useQrPreview'
 import { useI18n } from '../i18n/context'
+import { useMediaQuery } from '../hooks/useMediaQuery'
 import { EXPORT_FORMATS, EXPORT_SIZES, type ExportFormat } from '../lib/qr/render'
 import { densityOf } from '../lib/qr/encode'
 import type { Preferences } from '../lib/prefs'
@@ -74,18 +78,48 @@ function ScanBadge({ state }: { state: Extract<PreviewState, { status: 'ready' }
   )
 }
 
+function ScanDemoDisclosure({ type }: { type: ContentType }) {
+  const { t } = useI18n()
+  const [open, setOpen] = useState(false)
+  return (
+    <details
+      className="group/demo rounded-lg border border-zinc-200 dark:border-zinc-800"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
+      <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-indigo-500 [&::-webkit-details-marker]:hidden">
+        <Smartphone className="size-4 shrink-0 text-zinc-500" aria-hidden />
+        <span className="flex-1">{t('demo.title')}</span>
+        <ChevronDown className="size-4 shrink-0 text-zinc-500 group-open/demo:rotate-180" aria-hidden />
+      </summary>
+      {open && (
+        <div className="border-t border-zinc-200 p-3 dark:border-zinc-800">
+          <DevicePreview type={type} />
+        </div>
+      )}
+    </details>
+  )
+}
+
 export function PreviewPanel(props: Props) {
   const { t } = useI18n()
   const { state, type, notices, alt, prefs, onPrefsChange } = props
   const ready = props.actionsReady
+  const wideLayout = useMediaQuery('(min-width: 640px)')
 
   return (
     <Card className="flex min-w-0 flex-col gap-4">
       <h2 className="text-base font-semibold tracking-tight">{t('preview.title')}</h2>
       {state.status === 'empty' ? (
-        <DevicePreview type={type} />
+        wideLayout ? (
+          <DevicePreview type={type} />
+        ) : (
+          <>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">{t('preview.placeholder')}</p>
+            <ScanDemoDisclosure key={type} type={type} />
+          </>
+        )
       ) : (
-        <div className="mx-auto aspect-square w-full max-w-[22rem] overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
+        <div className="qr-output-image mx-auto aspect-square w-full overflow-hidden rounded-xl border border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
           {state.status === 'ready' ? (
             <img src={state.url} alt={alt} className="size-full object-contain" data-testid="qr-preview" />
           ) : (
@@ -127,7 +161,7 @@ export function PreviewPanel(props: Props) {
         </ul>
       )}
 
-      <div className="flex flex-col gap-3">
+      <div className={cx('flex-col gap-3', state.status === 'empty' ? 'hidden sm:flex' : 'flex')}>
         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
           <Select
             aria-label={t('export.format')}
@@ -182,7 +216,14 @@ export function PreviewPanel(props: Props) {
         </div>
       </div>
 
-      <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">{t('preview.printTip')}</p>
+      <p
+        className={cx(
+          'text-xs leading-relaxed text-zinc-500 dark:text-zinc-400',
+          state.status === 'empty' && 'hidden sm:block',
+        )}
+      >
+        {t('preview.printTip')}
+      </p>
     </Card>
   )
 }

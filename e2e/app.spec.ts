@@ -1,5 +1,5 @@
 import { expect, type Page } from '@playwright/test'
-import { test } from './fixtures'
+import { selectType, test } from './fixtures'
 import { readFile } from 'node:fs/promises'
 
 const scanStatus = (page: Page) => page.getByTestId('scan-status')
@@ -121,7 +121,7 @@ test('pastes clipboard text into a line field and below a textarea', async ({ pa
   await expect(text).toHaveValue('')
 
   await page.setViewportSize({ width: 320, height: 700 })
-  await page.getByRole('tab', { name: 'Localização' }).click()
+  await selectType(page, 'Localização')
   await expect(page.getByRole('button', { name: 'Colar em Latitude' })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true)
 })

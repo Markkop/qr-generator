@@ -101,9 +101,10 @@ test('silently omits failed, empty and non-HTML link previews', async ({ page })
   const height = (await page.locator('.content-card').boundingBox())!.height
   for (const path of ['/failed', '/plain', '/empty', '/offline']) {
     const address = `https://cards.example${path}`
-    const finished = path === '/offline'
-      ? page.waitForEvent('requestfailed', (request) => request.url() === address)
-      : page.waitForResponse((response) => response.url() === address)
+    const finished =
+      path === '/offline'
+        ? page.waitForEvent('requestfailed', (request) => request.url() === address)
+        : page.waitForResponse((response) => response.url() === address)
     await page.getByLabel('Endereço do site', { exact: true }).fill(address)
     await finished
     await expect(card).toHaveCount(0)

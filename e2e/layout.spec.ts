@@ -1,5 +1,5 @@
 import { expect } from '@playwright/test'
-import { test } from './fixtures'
+import { selectType, test } from './fixtures'
 
 test('keeps a vertical type selector beside the desktop editor while scrolling', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
@@ -34,54 +34,47 @@ test('keeps a vertical type selector beside the desktop editor while scrolling',
   await expect(page.getByLabel('Nome', { exact: true })).toHaveValue('Ana')
 })
 
-test('keeps all twelve types above the phone editor without horizontal overflow', async ({ page }) => {
+test('keeps a compact mobile picker above a full-width content, style and output flow', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 700 })
   await page.goto('/')
   const selector = page.getByRole('complementary', { name: 'Tipo de conteúdo' })
-  await expect(selector.getByRole('tablist')).toHaveAttribute('aria-orientation', 'horizontal')
+  const picker = selector.getByRole('combobox', { name: 'Tipo de conteúdo', exact: true })
+  await expect(picker.locator('option')).toHaveCount(12)
   const initial = await selector.boundingBox()
   const editor = await page.locator('.content-card').boundingBox()
+  const style = await page.locator('.style-column').boundingBox()
+  const output = await page.locator('.preview-column').boundingBox()
+  expect(initial!.height).toBeLessThanOrEqual(64)
   expect(initial!.y + initial!.height).toBeLessThan(editor!.y)
-  expect(initial!.height).toBeLessThan(220)
+  expect(editor!.y + editor!.height).toBeLessThan(style!.y)
+  expect(style!.y + style!.height).toBeLessThan(output!.y)
+  await expect(selector.getByRole('link', { name: 'Ver QR', exact: true })).toHaveAttribute('href', '#qr-output')
+  await expect(page.getByTestId('device-demo')).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Baixar', exact: true })).toBeHidden()
 
-  await page.getByRole('tab', { name: 'Contato', exact: true }).click()
+  const input = await page.getByLabel('Endereço do site', { exact: true }).boundingBox()
+  const paste = await page.getByRole('button', { name: 'Colar em Endereço do site' }).boundingBox()
+  const clear = await page.getByRole('button', { name: 'Limpar Endereço do site' }).boundingBox()
+  expect(input!.y).toBe(paste!.y)
+  expect(paste!.y).toBe(clear!.y)
+  expect(paste!.width).toBeGreaterThanOrEqual(44)
+  expect(clear!.width).toBeGreaterThanOrEqual(44)
+
+  await selectType(page, 'Contato')
   await page.evaluate(() => window.scrollTo(0, 500))
   const pinned = await selector.boundingBox()
   expect(pinned!.y).toBeGreaterThanOrEqual(0)
   expect(pinned!.y).toBeLessThanOrEqual(9)
-  for (const tab of await selector.getByRole('tab').all()) {
-    const box = await tab.boundingBox()
-    expect(box!.height).toBeGreaterThanOrEqual(44)
-    expect(box!.y).toBeGreaterThanOrEqual(pinned!.y)
-    expect(box!.y + box!.height).toBeLessThanOrEqual(pinned!.y + pinned!.height)
-  }
-
-  await page.getByRole('tab', { name: 'URL', exact: true }).click()
-  await page.keyboard.press('ArrowDown')
-  await expect(page.getByRole('tab', { name: 'Telefone', exact: true })).toBeFocused()
-  await page.keyboard.press('Home')
-  await expect(page.getByRole('tab', { name: 'URL', exact: true })).toBeFocused()
-  await page.keyboard.press('Tab')
-  await expect(page.getByRole('tabpanel', { name: 'URL', exact: true })).toBeFocused()
-
-  await page.getByRole('tab', { name: 'Contato', exact: true }).click()
-  await page.evaluate(() => {
-    window.scrollTo(0, 900)
-    document.getElementById('tab-calendar')!.click()
-  })
-  await expect(page.getByRole('tab', { name: 'Calendário', exact: true })).toHaveAttribute('aria-selected', 'true')
+  await selectType(page, 'Calendário')
+  await expect(page.getByRole('region', { name: 'Calendário', exact: true })).toBeVisible()
   const switched = await page.locator('.content-card').boundingBox()
   const stickySelector = await selector.boundingBox()
   expect(switched!.y).toBeGreaterThanOrEqual(stickySelector!.y + stickySelector!.height)
 
   for (const width of [320, 390, 768, 1024]) {
     await page.setViewportSize({ width, height: 800 })
-    await expect(selector.getByRole('tablist')).toHaveAttribute(
-      'aria-orientation',
-      width >= 640 ? 'vertical' : 'horizontal',
-    )
     for (const name of ['Contato', 'Calendário', 'Localização', 'Pix']) {
-      await page.getByRole('tab', { name, exact: true }).click()
+      await selectType(page, name)
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     }
   }
