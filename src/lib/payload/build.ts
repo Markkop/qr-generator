@@ -1,4 +1,5 @@
 import type { Message, MessageKey } from '../../i18n/messages'
+import { resolveWhatsapp } from '../phone-format'
 import type { ContentType, FieldsByType } from './types'
 import { buildPix } from './pix'
 import { buildCalendar } from './calendar'
@@ -120,15 +121,15 @@ function buildPhone({ number }: FieldsByType['phone']): BuildResult {
   return result(`tel:${normalized}`, { warnings: phoneWarnings(normalized) })
 }
 
-function buildWhatsapp({ number, message }: FieldsByType['whatsapp']): BuildResult {
-  const digits = number.replace(/\D/g, '').replace(/^00/, '')
-  if (!digits) return result(null, { hint: msg('hint.whatsapp') })
-  if (digits.length < 8 || digits.length > 15) {
-    return result(null, { errors: { number: msg('error.phoneShort') } })
-  }
+function buildWhatsapp({ country, number, message }: FieldsByType['whatsapp']): BuildResult {
+  if (!number.trim()) return result(null, { hint: msg('hint.whatsapp') })
+  const resolved = resolveWhatsapp(country, number)
+  if (!resolved) return result(null, { errors: { number: msg('error.phoneShort') } })
   const text = message.trim()
-  const link = text ? `https://wa.me/${digits}?text=${encodeURIComponent(text)}` : `https://wa.me/${digits}`
-  return result(link, { warnings: phoneWarnings(number.trim()) })
+  const link = text
+    ? `https://wa.me/${resolved.digits}?text=${encodeURIComponent(text)}`
+    : `https://wa.me/${resolved.digits}`
+  return result(link)
 }
 
 function buildSms({ number, message }: FieldsByType['sms']): BuildResult {
@@ -274,8 +275,10 @@ export function describe<T extends ContentType>(type: T, fields: FieldsByType[T]
       return (fields as FieldsByType['email']).to.trim()
     case 'phone':
       return (fields as FieldsByType['phone']).number.trim()
-    case 'whatsapp':
-      return (fields as FieldsByType['whatsapp']).number.trim()
+    case 'whatsapp': {
+      const whatsapp = fields as FieldsByType['whatsapp']
+      return resolveWhatsapp(whatsapp.country, whatsapp.number)?.display || whatsapp.number.trim()
+    }
     case 'sms':
       return (fields as FieldsByType['sms']).number.trim()
     case 'contact': {

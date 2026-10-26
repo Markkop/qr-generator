@@ -1,3 +1,5 @@
+import { detectDefaultCountry } from '../phone-format'
+
 export const CONTENT_TYPES = [
   'url',
   'text',
@@ -25,7 +27,7 @@ export interface FieldsByType {
   wifi: { ssid: string; password: string; encryption: WifiEncryption; hidden: boolean }
   email: { to: string; subject: string; body: string }
   phone: { number: string }
-  whatsapp: { number: string; message: string }
+  whatsapp: { country: string; number: string; message: string }
   sms: { number: string; message: string }
   contact: {
     firstName: string
@@ -67,7 +69,7 @@ export const DEFAULT_FIELDS: AllFields = {
   wifi: { ssid: '', password: '', encryption: 'WPA', hidden: false },
   email: { to: '', subject: '', body: '' },
   phone: { number: '' },
-  whatsapp: { number: '', message: '' },
+  whatsapp: { country: detectDefaultCountry(), number: '', message: '' },
   sms: { number: '', message: '' },
   contact: {
     firstName: '',

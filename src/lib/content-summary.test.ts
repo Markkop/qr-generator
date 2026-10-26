@@ -95,6 +95,13 @@ describe('content summaries', () => {
     expect(contentSummary('telegram', { username: 'https://t.me/example', message: 'Hello' }, en)?.title).toBe(
       '@example',
     )
+    expect(contentSummary('whatsapp', { country: 'BR', number: '11996792211', message: 'Oi' }, pt)?.title).toBe(
+      '(11) 99679-2211',
+    )
+    expect(contentSummary('whatsapp', { country: 'US', number: '2025550123', message: '' }, en)?.title).toBe(
+      '(202) 555-0123',
+    )
+    expect(contentSummary('sms', { number: '+55 11 99679 2211', message: '' }, pt)?.title).toBe('+55 11 99679 2211')
     expect(contentSummary('url', { url: 'https://example.com' }, en)).toBeNull()
   })
 })

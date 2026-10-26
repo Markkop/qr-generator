@@ -14,6 +14,9 @@ importers:
       dexie-react-hooks:
         specifier: ^4.4.0
         version: 4.4.0(dexie@4.4.7)(react@19.3.1)
+      libphonenumber-js:
+        specifier: ^1.13.15
+        version: 1.13.15
       lucide-react:
         specifier: ^1.61.0
         version: 1.61.0(@types/react@19.3.0)(react@19.3.1)
@@ -1792,6 +1795,9 @@ packages:
   leven@3.1.0:
     resolution: {integrity: sha512-qsda+H8jTaUaN/x5vzW2rzc+8Rw4TAQ/4KjB46IwK5VH+IlVeeeje/EoZRpiXvIqjFgK84QffqPztGI3VBLG1A==}
     engines: {node: '>=6'}
+
+  libphonenumber-js@1.13.15:
+    resolution: {integrity: sha512-AHdhEQeDFEJ4GKDAQ9AwxChy+v2kUILUB3TGQRpkXMkWePjXTU/WQEzWVQoIx/Gz8fE73Wr5SEuZCy2vk8jrMQ==}
 
   lightningcss-android-arm64@1.32.0:
     resolution: {integrity: sha512-YK7/ClTt4kAK0vo6w3X+Pnm0D2cf2vPHbhOXdoNti1Ga0al1P4TBZhwjATvjNwLEBCnKvjJc2jQgHXH0NEwlAg==}
@@ -4305,6 +4311,8 @@ snapshots:
   jsonpointer@5.0.1: {}
 
   leven@3.1.0: {}
+
+  libphonenumber-js@1.13.15: {}
 
   lightningcss-android-arm64@1.32.0:
     optional: true

@@ -111,16 +111,24 @@ group('phone and sms', () => {
     expect(buildPayload('phone', { number: '+55 11 91234 5678' }).warnings).toHaveLength(0)
   })
 
-  it('builds an official wa.me link without a plus sign', () => {
-    expect(buildPayload('whatsapp', { number: '+55 (11) 91234-5678', message: 'Olá & time' }).payload).toBe(
-      'https://wa.me/5511912345678?text=Ol%C3%A1%20%26%20time',
-    )
-    expect(buildPayload('whatsapp', { number: '0055 11 91234 5678', message: '  ' }).payload).toBe(
+  it('builds an official wa.me link with the selected country code and no plus sign', () => {
+    expect(
+      buildPayload('whatsapp', { country: 'BR', number: '+55 (11) 91234-5678', message: 'Olá & time' }).payload,
+    ).toBe('https://wa.me/5511912345678?text=Ol%C3%A1%20%26%20time')
+    expect(buildPayload('whatsapp', { country: 'US', number: '0055 11 91234 5678', message: '  ' }).payload).toBe(
       'https://wa.me/5511912345678',
     )
-    expect(buildPayload('whatsapp', { number: '11912345678', message: '' }).warnings).toHaveLength(1)
-    expect(buildPayload('whatsapp', { number: '+55 11', message: '' }).errors.number).toBeTruthy()
-    expect(describe('whatsapp', { number: '+55 11 91234 5678', message: 'secret draft' })).toBe('+55 11 91234 5678')
+    expect(buildPayload('whatsapp', { country: 'BR', number: '11996792211', message: '' }).payload).toBe(
+      'https://wa.me/5511996792211',
+    )
+    expect(buildPayload('whatsapp', { country: 'US', number: '11996792211', message: '' }).payload).toBe(
+      'https://wa.me/111996792211',
+    )
+    expect(buildPayload('whatsapp', { country: 'BR', number: '11912345678', message: '' }).warnings).toHaveLength(0)
+    expect(buildPayload('whatsapp', { country: 'BR', number: '+55 11', message: '' }).errors.number).toBeTruthy()
+    expect(describe('whatsapp', { country: 'BR', number: '11996792211', message: 'secret draft' })).toBe(
+      '(11) 99679-2211',
+    )
   })
 
   it('builds SMSTO with a raw message', () => {

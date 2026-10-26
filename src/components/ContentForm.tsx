@@ -1,4 +1,4 @@
-import { useRef, useState, type InputHTMLAttributes } from 'react'
+import { useEffect, useMemo, useRef, useState, type InputHTMLAttributes } from 'react'
 import { Eye, EyeOff, FileDown, LocateFixed } from 'lucide-react'
 import { useI18n } from '../i18n/context'
 import type { Message, MessageKey } from '../i18n/messages'
@@ -9,6 +9,13 @@ import {
   type PixKeyType,
   type WifiEncryption,
 } from '../lib/payload/types'
+import {
+  internationalEntry,
+  normalizeCountry,
+  phoneCountryOptions,
+  phonePlaceholder,
+  withCountry,
+} from '../lib/phone-format'
 import { buildCalendar } from '../lib/payload/calendar'
 import { downloadBlob } from '../lib/export'
 import { Button, Field, FieldActions, PasteArea, PasteInput, Segmented, Select, Switch, TextInput } from './ui'
@@ -222,10 +229,32 @@ function PhoneForm({ fields, errors, onChange }: FormProps<'phone'>) {
 }
 
 function WhatsappForm({ fields, errors, onChange }: FormProps<'whatsapp'>) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const error = useErrorText(errors)
+  const country = normalizeCountry(fields.country)
+  const countries = useMemo(() => phoneCountryOptions(locale), [locale])
+  useEffect(() => {
+    const adopted = internationalEntry(fields.number)
+    if (!adopted || (adopted.country === country && adopted.number === fields.number)) return
+    onChange(adopted)
+  }, [country, fields.number, onChange])
   return (
     <div className="flex flex-col gap-4">
+      <Field label={t('whatsapp.country')}>
+        {(p) => (
+          <Select
+            {...p}
+            value={country}
+            onChange={(e) => onChange(withCountry(e.target.value, country, fields.number))}
+          >
+            {countries.map((option) => (
+              <option key={option.code} value={option.code}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
       <Field label={t('phone.number')} error={error('number')} hint={t('whatsapp.hint')}>
         {(p) => (
           <PasteInput
@@ -233,9 +262,13 @@ function WhatsappForm({ fields, errors, onChange }: FormProps<'whatsapp'>) {
             label={t('phone.number')}
             type="tel"
             inputMode="tel"
-            placeholder={t('phone.placeholder')}
+            autoComplete="tel-national"
+            placeholder={phonePlaceholder(country)}
             value={fields.number}
-            onChange={(e) => onChange({ number: e.target.value })}
+            onChange={(e) => {
+              const adopted = internationalEntry(e.target.value)
+              onChange(adopted ?? { number: e.target.value })
+            }}
           />
         )}
       </Field>

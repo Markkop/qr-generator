@@ -1,5 +1,6 @@
 import type { I18n } from '../i18n/context'
 import type { MessageKey } from '../i18n/messages'
+import { resolveWhatsapp } from './phone-format'
 import { formatCoordinate, normalizeTelegramUsername } from './payload/build'
 import { normalizePixAmount, normalizePixKey } from './payload/pix'
 import type { ContentType, FieldsByType } from './payload/types'
@@ -52,7 +53,13 @@ export function contentSummary<T extends ContentType>(
     }
     case 'phone':
       return { title: (fields as FieldsByType['phone']).number.trim(), details }
-    case 'whatsapp':
+    case 'whatsapp': {
+      const f = fields as FieldsByType['whatsapp']
+      const resolved = resolveWhatsapp(f.country, f.number)
+      if (!resolved) return null
+      add('summary.message', f.message)
+      return { title: resolved.display, details }
+    }
     case 'sms': {
       const f = fields as FieldsByType['sms']
       add('summary.message', f.message)
