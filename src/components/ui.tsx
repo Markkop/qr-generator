@@ -6,7 +6,6 @@ import {
   useId,
   useRef,
   useState,
-  type ButtonHTMLAttributes,
   type InputHTMLAttributes,
   type ReactNode,
   type RefObject,
@@ -14,36 +13,9 @@ import {
   type TextareaHTMLAttributes,
 } from 'react'
 import { useToast } from './toast-context'
+import { ActionButton } from './ActionButton'
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
-
-const buttonVariants: Record<ButtonVariant, string> = {
-  primary: 'bg-indigo-600 text-white hover:bg-indigo-500 disabled:bg-indigo-600/50',
-  secondary:
-    'border border-zinc-300 bg-surface text-zinc-900 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800',
-  ghost: 'text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800',
-  danger: 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/50',
-}
-
-export function Button({
-  variant = 'secondary',
-  size = 'md',
-  className,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: 'sm' | 'md' }) {
-  return (
-    <button
-      type="button"
-      className={cx(
-        'inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:cursor-not-allowed disabled:opacity-60',
-        size === 'md' ? 'min-h-11 px-4 py-2 text-sm' : 'min-h-11 px-2.5 py-2 text-xs sm:min-h-8 sm:py-1',
-        buttonVariants[variant],
-        className,
-      )}
-      {...props}
-    />
-  )
-}
+export { Button } from './Button'
 
 const controlClass =
   'min-w-0 w-full rounded-lg border border-zinc-300 bg-field px-3 text-base sm:text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500 aria-invalid:border-red-500'
@@ -112,26 +84,28 @@ function PasteButton({
   const { t } = useI18n()
   const toast = useToast()
   return (
-    <button
-      type="button"
+    <ActionButton
+      size="icon"
+      label={t('field.paste')}
+      icon={ClipboardPaste}
+      compact
+      successLabel={t('feedback.pasted')}
       aria-label={t('field.pasteInto', { label })}
       title={t('field.pasteInto', { label })}
-      onClick={() => {
+      onAction={async () => {
         const element = control.current
-        if (!element) return
-        void navigator.clipboard
-          .readText()
-          .then((text) => {
-            writeControlValue(element, text)
-            element.focus()
-          })
-          .catch(() => toast(t('field.pasteFailed'), 'error'))
+        if (!element) return false
+        try {
+          const text = await navigator.clipboard.readText()
+          writeControlValue(element, text)
+          element.focus()
+        } catch (error) {
+          toast(t('field.pasteFailed'), 'error')
+          throw error
+        }
       }}
       className={fieldActionClass}
-    >
-      <ClipboardPaste className="size-4" aria-hidden />
-      <span className="hidden sm:inline">{t('field.paste')}</span>
-    </button>
+    />
   )
 }
 
@@ -144,21 +118,22 @@ function ClearButton({
 }) {
   const { t } = useI18n()
   return (
-    <button
-      type="button"
+    <ActionButton
+      size="icon"
+      label={t('field.clear')}
+      icon={Eraser}
+      compact
+      successLabel={t('feedback.cleared')}
       aria-label={t('field.clearFrom', { label })}
       title={t('field.clearFrom', { label })}
-      onClick={() => {
+      onAction={() => {
         const element = control.current
-        if (!element) return
+        if (!element) return false
         writeControlValue(element, '')
         element.focus()
       }}
       className={fieldActionClass}
-    >
-      <Eraser className="size-4" aria-hidden />
-      <span className="hidden sm:inline">{t('field.clear')}</span>
-    </button>
+    />
   )
 }
 

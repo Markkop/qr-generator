@@ -14,7 +14,10 @@ async function content(page: Page) {
 
 async function restore(page: Page, label: string) {
   await page.getByRole('button', { name: 'Salvar no histórico', exact: true }).click()
-  await expect(page.getByRole('status')).toContainText('Salvo no histórico.')
+  await expect(page.getByRole('button', { name: 'Salvar no histórico', exact: true })).toHaveAttribute(
+    'data-state',
+    'success',
+  )
   await page.reload()
   await page.getByRole('button', { name: /^Histórico/ }).click()
   await page.getByRole('button', { name: `Abrir ${label} no editor`, exact: true }).click()

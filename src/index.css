@@ -42,6 +42,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+button:not(:disabled):not([aria-disabled='true']) {
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button:not(:disabled):not([aria-disabled='true']):active,
+  summary:active {
+    transform: scale(0.98);
+  }
+}
+
 html {
   scroll-padding-top: 5rem;
 }

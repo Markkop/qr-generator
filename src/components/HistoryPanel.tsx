@@ -35,6 +35,8 @@ import { historyPopoverBox } from '../lib/history-popover'
 import { Button, Select, Switch, TextInput } from './ui'
 import { cx } from '../lib/cx'
 import { useToast } from './toast-context'
+import { ActionButton, FeedbackButton } from './ActionButton'
+import { useActionFeedback } from '../hooks/useActionFeedback'
 
 const PAGE_SIZE = 8
 
@@ -87,10 +89,11 @@ function EntryRow({
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(entry.label)
   const label = entry.label || t(typeLabelKey(entry.type))
+  const rename = useActionFeedback()
 
   const commitRename = async () => {
-    setEditing(false)
     if (draft.trim() !== entry.label) await renameEntry(entry.id, draft)
+    setEditing(false)
   }
 
   const download = async () => {
@@ -98,8 +101,9 @@ function EntryRow({
       const logo = await getLogo(entry.logoId)
       const { blob } = await renderQr({ payload: entry.payload, style: entry.style, logo }, 1024, 'png')
       downloadBlob(blob, `qr-${entry.type}-${entry.id.slice(0, 8)}.png`)
-    } catch {
+    } catch (error) {
       toast(t('history.renderFailed'), 'error')
+      throw error
     }
   }
 
@@ -110,7 +114,7 @@ function EntryRow({
           className="flex items-center gap-1"
           onSubmit={(e) => {
             e.preventDefault()
-            void commitRename()
+            void rename.run(commitRename)
           }}
         >
           <TextInput
@@ -128,9 +132,15 @@ function EntryRow({
             className="h-8"
             autoFocus
           />
-          <Button type="submit" size="sm" variant="ghost" aria-label={t('history.saveName')}>
-            <Check className="size-4" aria-hidden />
-          </Button>
+          <FeedbackButton
+            state={rename.state}
+            type="submit"
+            size="sm"
+            variant="ghost"
+            iconOnly
+            icon={Check}
+            label={t('history.saveName')}
+          />
         </form>
       ) : (
         <div className="flex items-center gap-1">
@@ -166,10 +176,14 @@ function EntryRow({
       )}
       {menuOpen && !editing && (
         <div className="mt-1.5 flex flex-wrap gap-1 border-t border-zinc-100 px-1 pt-1.5 dark:border-zinc-800">
-          <Button size="sm" variant="ghost" onClick={download}>
-            <Download className="size-3.5" aria-hidden />
-            {t('history.downloadPng')}
-          </Button>
+          <ActionButton
+            size="sm"
+            variant="ghost"
+            onAction={download}
+            icon={Download}
+            label={t('history.downloadPng')}
+            successLabel={t('feedback.downloaded')}
+          />
           <Button
             size="sm"
             variant="ghost"
@@ -182,21 +196,23 @@ function EntryRow({
             <Pencil className="size-3.5" aria-hidden />
             {t('history.rename')}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => setPinned(entry.id, entry.pinned === 0)}>
-            {entry.pinned ? <PinOff className="size-3.5" aria-hidden /> : <Pin className="size-3.5" aria-hidden />}
-            {t(entry.pinned ? 'history.unpin' : 'history.pin')}
-          </Button>
-          <Button
+          <ActionButton
+            size="sm"
+            variant="ghost"
+            onAction={() => setPinned(entry.id, entry.pinned === 0)}
+            icon={entry.pinned ? PinOff : Pin}
+            label={t(entry.pinned ? 'history.unpin' : 'history.pin')}
+          />
+          <ActionButton
             size="sm"
             variant="danger"
-            onClick={async () => {
+            icon={Trash2}
+            label={t('history.delete')}
+            onAction={async () => {
               await deleteEntry(entry.id)
               toast(t('history.deleted'))
             }}
-          >
-            <Trash2 className="size-3.5" aria-hidden />
-            {t('history.delete')}
-          </Button>
+          />
         </div>
       )}
     </li>
@@ -213,6 +229,7 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
   const { t, tn } = useI18n()
   const toast = useToast()
   const importInput = useRef<HTMLInputElement>(null)
+  const importing = useActionFeedback()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -332,7 +349,7 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
   }
 
   const onImport = async (file: File | undefined) => {
-    if (!file) return
+    if (!file) return false
     try {
       const count = await importHistory(JSON.parse(await file.text()))
       toast(tn('history.imported', count))
@@ -347,13 +364,14 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
         ),
         'error',
       )
+      throw error
     } finally {
       if (importInput.current) importInput.current.value = ''
     }
   }
 
   const onClear = async () => {
-    if (!window.confirm(t('history.confirmClear'))) return
+    if (!window.confirm(t('history.confirmClear'))) return false
     await clearHistory()
     toast(t('history.cleared'))
   }
@@ -452,18 +470,32 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
             {manageOpen && (
               <div id={manageId} className="flex flex-col gap-3">
                 <div className="flex flex-wrap gap-1">
-                  <Button size="sm" variant="ghost" onClick={onExport} disabled={!total}>
-                    <FileDown className="size-4" aria-hidden />
-                    {t('history.export')}
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => importInput.current?.click()}>
-                    <FileUp className="size-4" aria-hidden />
-                    {t('history.import')}
-                  </Button>
-                  <Button size="sm" variant="danger" onClick={onClear} disabled={!total}>
-                    <Trash2 className="size-4" aria-hidden />
-                    {t('history.clear')}
-                  </Button>
+                  <ActionButton
+                    size="sm"
+                    variant="ghost"
+                    onAction={onExport}
+                    disabled={!total}
+                    icon={FileDown}
+                    label={t('history.export')}
+                    successLabel={t('feedback.downloaded')}
+                  />
+                  <FeedbackButton
+                    state={importing.state}
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => importInput.current?.click()}
+                    icon={FileUp}
+                    label={t('history.import')}
+                  />
+                  <ActionButton
+                    size="sm"
+                    variant="danger"
+                    onAction={onClear}
+                    disabled={!total}
+                    icon={Trash2}
+                    label={t('history.clear')}
+                    successLabel={t('feedback.cleared')}
+                  />
                 </div>
                 <Switch
                   checked={saveHistory}
@@ -524,7 +556,10 @@ export function HistoryPanel({ saveHistory, onSaveHistoryChange, onOpen }: Props
               className="sr-only"
               tabIndex={-1}
               aria-hidden
-              onChange={(e) => onImport(e.target.files?.[0])}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                void importing.run(() => onImport(file))
+              }}
             />
             {entries === undefined ? null : total === 0 ? (
               <p className="rounded-xl border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">

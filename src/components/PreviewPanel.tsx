@@ -18,7 +18,9 @@ import { useMediaQuery } from '../hooks/useMediaQuery'
 import { EXPORT_FORMATS, EXPORT_SIZES, type ExportFormat } from '../lib/qr/render'
 import { densityOf } from '../lib/qr/encode'
 import type { Preferences } from '../lib/prefs'
-import { Button, Card, Select } from './ui'
+import { Card, Select } from './ui'
+import { ActionButton } from './ActionButton'
+import type { ButtonAction } from '../hooks/useActionFeedback'
 import { cx } from '../lib/cx'
 import type { ContentType } from '../lib/payload/types'
 import { DevicePreview } from './DevicePreview'
@@ -36,11 +38,11 @@ interface Props {
   alt: string
   prefs: Preferences
   onPrefsChange: (patch: Partial<Preferences>) => void
-  onDownload: () => void
-  onCopyImage: () => void
-  onCopyText: () => void
-  onShare?: () => void
-  onSave: () => void
+  onDownload: ButtonAction
+  onCopyImage: ButtonAction
+  onCopyText: ButtonAction
+  onShare?: ButtonAction
+  onSave: ButtonAction
   canCopyImage: boolean
 }
 
@@ -161,7 +163,10 @@ export function PreviewPanel(props: Props) {
         </ul>
       )}
 
-      <div className={cx('flex-col gap-3', state.status === 'empty' ? 'hidden sm:flex' : 'flex')}>
+      <div
+        key={state.status === 'ready' ? state.url : type}
+        className={cx('flex-col gap-3', state.status === 'empty' ? 'hidden sm:flex' : 'flex')}
+      >
         <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
           <Select
             aria-label={t('export.format')}
@@ -188,31 +193,49 @@ export function PreviewPanel(props: Props) {
             ))}
           </Select>
         </div>
-        <Button variant="primary" disabled={!ready} onClick={props.onDownload}>
-          <Download className="size-4" aria-hidden />
-          {t('action.download')}
-        </Button>
+        <ActionButton
+          variant="primary"
+          disabled={!ready}
+          onAction={props.onDownload}
+          icon={Download}
+          label={t('action.download')}
+          successLabel={t('feedback.downloaded')}
+        />
         <div className="grid grid-cols-2 gap-2 [&_button]:px-3 [&_svg]:shrink-0">
           {props.canCopyImage && (
-            <Button disabled={!ready} onClick={props.onCopyImage}>
-              <ImageIcon className="size-4" aria-hidden />
-              {t('action.copyImage')}
-            </Button>
+            <ActionButton
+              disabled={!ready}
+              onAction={props.onCopyImage}
+              icon={ImageIcon}
+              label={t('action.copyImage')}
+              successLabel={t('feedback.copied')}
+            />
           )}
-          <Button disabled={!ready} onClick={props.onCopyText} className={cx(!props.canCopyImage && 'col-span-2')}>
-            <ClipboardCopy className="size-4" aria-hidden />
-            {t('action.copyContent')}
-          </Button>
+          <ActionButton
+            disabled={!ready}
+            onAction={props.onCopyText}
+            icon={ClipboardCopy}
+            label={t('action.copyContent')}
+            successLabel={t('feedback.copied')}
+            className={cx(!props.canCopyImage && 'col-span-2')}
+          />
           {props.onShare && (
-            <Button disabled={!ready} onClick={props.onShare}>
-              <Share2 className="size-4" aria-hidden />
-              {t('action.share')}
-            </Button>
+            <ActionButton
+              disabled={!ready}
+              onAction={props.onShare}
+              icon={Share2}
+              label={t('action.share')}
+              successLabel={t('feedback.shared')}
+            />
           )}
-          <Button disabled={!ready} onClick={props.onSave} className={cx(!props.onShare && 'col-span-2')}>
-            <BookmarkPlus className="size-4" aria-hidden />
-            {t('action.save')}
-          </Button>
+          <ActionButton
+            disabled={!ready}
+            onAction={props.onSave}
+            icon={BookmarkPlus}
+            label={t('action.save')}
+            successLabel={t('feedback.saved')}
+            className={cx(!props.onShare && 'col-span-2')}
+          />
         </div>
       </div>
 

@@ -17,6 +17,8 @@ import { AppError } from '../lib/errors'
 import { prepareLogo } from '../lib/logo'
 import { Button, ColorInput, Field, Segmented, Select, Switch } from './ui'
 import { useToast } from './toast-context'
+import { ActionButton, FeedbackButton } from './ActionButton'
+import { useActionFeedback } from '../hooks/useActionFeedback'
 
 interface Props {
   style: QrStyle
@@ -72,13 +74,15 @@ export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }
   const fileInput = useRef<HTMLInputElement>(null)
   const toast = useToast()
   const effectiveEcl = resolveErrorCorrection(style, Boolean(logo))
+  const upload = useActionFeedback()
 
   const onFile = async (file: File | undefined) => {
-    if (!file) return
+    if (!file) return false
     try {
       onLogoChange(await prepareLogo(file))
     } catch (error) {
       toast(t(error instanceof AppError ? error.key : 'logo.errorLoad'), 'error')
+      throw error
     } finally {
       if (fileInput.current) fileInput.current.value = ''
     }
@@ -164,11 +168,18 @@ export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }
               className="sr-only"
               tabIndex={-1}
               aria-hidden
-              onChange={(e) => onFile(e.target.files?.[0])}
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                void upload.run(() => onFile(file))
+              }}
             />
-            <Button size="sm" onClick={() => fileInput.current?.click()}>
-              {logo ? t('logo.replace') : t('logo.upload')}
-            </Button>
+            <FeedbackButton
+              state={upload.state}
+              size="sm"
+              onClick={() => fileInput.current?.click()}
+              icon={ImagePlus}
+              label={logo ? t('logo.replace') : t('logo.upload')}
+            />
             {logo && (
               <Button size="sm" variant="danger" onClick={() => onLogoChange(null)}>
                 <Trash2 className="size-3.5" aria-hidden />
@@ -220,10 +231,15 @@ export function StylePanel({ style, logo, onStyleChange, onLogoChange, onReset }
           onChange={(quietZone) => onStyleChange({ quietZone })}
         />
 
-        <Button variant="ghost" size="sm" className="self-start" onClick={onReset}>
-          <RotateCcw className="size-3.5" aria-hidden />
-          {t('style.reset')}
-        </Button>
+        <ActionButton
+          variant="ghost"
+          size="sm"
+          className="self-start"
+          onAction={onReset}
+          icon={RotateCcw}
+          label={t('style.reset')}
+          successLabel={t('feedback.reset')}
+        />
       </div>
     </details>
   )

@@ -131,7 +131,10 @@ test('copies the image and the content to the clipboard', async ({ page }) => {
   await expectScans(page)
 
   await page.getByRole('button', { name: 'Copiar imagem' }).click()
-  await expect(page.getByRole('status')).toContainText('Imagem copiada')
+  await expect(page.getByRole('button', { name: 'Copiar imagem', exact: true })).toHaveAttribute(
+    'data-state',
+    'success',
+  )
   const types = await page.evaluate(async () => (await navigator.clipboard.read()).flatMap((item) => item.types))
   expect(types).toContain('image/png')
 

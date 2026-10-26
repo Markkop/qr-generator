@@ -120,58 +120,68 @@ export default function App() {
   const ready = preview.status === 'ready' && preview.payload === built.payload ? preview : null
 
   const record = async (force = false) => {
-    if (!ready || (!force && !prefs.saveHistory)) return
+    if (!ready || (!force && !prefs.saveHistory)) return false
     try {
       await saveEntry({ type, fields: current, payload: ready.payload, style, logo })
       if (!persistRequested.current) {
         persistRequested.current = true
         void requestPersistentStorage()
       }
-      if (force) toast(t('toast.saved'))
-    } catch {
+      return true
+    } catch (error) {
       toast(t('toast.saveFailed'), 'error')
+      if (force) throw error
+      return false
     }
   }
 
   const onDownload = async () => {
-    if (!ready) return
+    if (!ready) return false
     try {
       const { blob } = await renderQr({ payload: ready.payload, style, logo }, prefs.exportSize, prefs.exportFormat)
       downloadBlob(blob, fileName(type, description, prefs.exportFormat))
-      toast(t('toast.downloaded'))
       void record()
-    } catch {
+    } catch (error) {
       toast(t('toast.downloadFailed'), 'error')
+      throw error
     }
   }
 
   const onCopyImage = () => {
-    if (!ready) return
-    copyImage(Promise.resolve(ready.blob))
+    if (!ready) return false
+    return copyImage(Promise.resolve(ready.blob))
       .then(() => {
-        toast(t('toast.imageCopied'))
         void record()
       })
-      .catch(() => toast(t('toast.copyImageBlocked'), 'error'))
+      .catch((error) => {
+        toast(t('toast.copyImageBlocked'), 'error')
+        throw error
+      })
   }
 
   const onCopyText = () => {
-    if (!ready) return
-    copyText(ready.payload)
+    if (!ready) return false
+    return copyText(ready.payload)
       .then(() => {
-        toast(t('toast.contentCopied'))
         void record()
       })
-      .catch(() => toast(t('toast.copyFailed'), 'error'))
+      .catch((error) => {
+        toast(t('toast.copyFailed'), 'error')
+        throw error
+      })
   }
 
   const onShare = () => {
-    if (!ready) return
-    shareImage(ready.blob, fileName(type, description, 'png'), t('share.title', { type: t(typeLabelKey(type)) }))
+    if (!ready) return false
+    return shareImage(ready.blob, fileName(type, description, 'png'), t('share.title', { type: t(typeLabelKey(type)) }))
       .then((outcome) => {
         if (outcome === 'shared') void record()
+        return outcome === 'shared'
       })
-      .catch(() => toast(t('toast.shareFailed'), 'error'))
+      .catch((error) => {
+        toast(t('toast.shareFailed'), 'error')
+        throw error
+      })
   }
 
   const onOpen = async (entry: HistoryEntry) => {
@@ -310,7 +320,7 @@ export default function App() {
                 onCopyImage={onCopyImage}
                 onCopyText={onCopyText}
                 onShare={SHARE_SUPPORTED ? onShare : undefined}
-                onSave={() => void record(true)}
+                onSave={() => record(true)}
                 canCopyImage={COPY_SUPPORTED}
               />
             </div>

@@ -18,8 +18,9 @@ import {
 } from '../lib/phone-format'
 import { buildCalendar } from '../lib/payload/calendar'
 import { downloadBlob } from '../lib/export'
-import { Button, Field, FieldActions, PasteArea, PasteInput, Segmented, Select, Switch, TextInput } from './ui'
+import { Field, FieldActions, PasteArea, PasteInput, Segmented, Select, Switch, TextInput } from './ui'
 import { useToast } from './toast-context'
+import { ActionButton } from './ActionButton'
 
 interface FormProps<T extends ContentType> {
   fields: FieldsByType[T]
@@ -369,25 +370,25 @@ function LocationForm({ fields, errors, onChange }: FormProps<'location'>) {
   const { t } = useI18n()
   const error = useErrorText(errors)
   const toast = useToast()
-  const [locating, setLocating] = useState(false)
-  const locate = () => {
-    if (!navigator.geolocation) {
-      toast(t('location.unsupported'), 'error')
-      return
-    }
-    setLocating(true)
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        setLocating(false)
-        onChange({ latitude: coords.latitude.toFixed(6), longitude: coords.longitude.toFixed(6) })
-      },
-      (geoError) => {
-        setLocating(false)
-        toast(t(geoError.code === geoError.PERMISSION_DENIED ? 'location.denied' : 'location.failed'), 'error')
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    )
-  }
+  const locate = () =>
+    new Promise<void>((resolve, reject) => {
+      if (!navigator.geolocation) {
+        toast(t('location.unsupported'), 'error')
+        reject(new Error(t('location.unsupported')))
+        return
+      }
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          onChange({ latitude: coords.latitude.toFixed(6), longitude: coords.longitude.toFixed(6) })
+          resolve()
+        },
+        (geoError) => {
+          toast(t(geoError.code === geoError.PERMISSION_DENIED ? 'location.denied' : 'location.failed'), 'error')
+          reject(geoError)
+        },
+        { enableHighAccuracy: true, timeout: 10000 },
+      )
+    })
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -416,10 +417,14 @@ function LocationForm({ fields, errors, onChange }: FormProps<'location'>) {
           )}
         </Field>
       </div>
-      <Button onClick={locate} disabled={locating} className="self-start">
-        <LocateFixed className="size-4" aria-hidden />
-        {locating ? t('location.locating') : t('location.useMine')}
-      </Button>
+      <ActionButton
+        onAction={locate}
+        className="self-start"
+        icon={LocateFixed}
+        label={t('location.useMine')}
+        pendingLabel={t('location.locating')}
+        successLabel={t('feedback.located')}
+      />
       <p className="text-xs text-zinc-500 dark:text-zinc-400">{t('location.privacy')}</p>
     </div>
   )
@@ -578,15 +583,16 @@ function CalendarForm({ fields, errors, onChange }: FormProps<'calendar'>) {
         )}
       </Field>
       <div className="flex flex-wrap items-center gap-3">
-        <Button
+        <ActionButton
           disabled={!payload}
-          onClick={() => {
+          icon={FileDown}
+          label={t('calendar.download')}
+          successLabel={t('feedback.downloaded')}
+          onAction={() => {
             if (payload) downloadBlob(new Blob([payload], { type: 'text/calendar;charset=utf-8' }), 'evento.ics')
+            else return false
           }}
-        >
-          <FileDown className="size-4" aria-hidden />
-          {t('calendar.download')}
-        </Button>
+        />
         <p className="min-w-40 flex-1 text-xs text-zinc-500 dark:text-zinc-400">{t('calendar.help')}</p>
       </div>
     </div>
